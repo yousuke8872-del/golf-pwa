@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -6,7 +7,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ゴルフ記録">
-<link rel="manifest" href="manifest.json">
 <title>ゴルフ記録</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
@@ -24,22 +24,14 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'Hiragino S
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);will-change:transform;transition:transform .32s cubic-bezier(.4,0,.2,1);transform:translateX(100%);overflow:hidden}
 .screen.active{transform:translateX(0)}
 .screen.left{transform:translateX(-25%)}
-
-/* Header */
 .hdr{background:var(--surf);border-bottom:.5px solid var(--bd);display:flex;align-items:center;gap:8px;flex-shrink:0;padding:12px 14px;padding-top:max(12px,var(--safe-top))}
 .hdr h1{font-size:17px;font-weight:700;flex:1;letter-spacing:-.3px}
 .back-btn{background:none;border:none;color:var(--g);font-size:15px;padding:6px 8px;cursor:pointer;font-family:inherit;font-weight:500;flex-shrink:0}
 .hdr-btn{background:none;border:.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-size:13px;padding:6px 10px;cursor:pointer;font-family:inherit}
-
-/* Scroll body */
 .body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;padding-bottom:max(24px,var(--safe-bot))}
 .body-nb{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:max(24px,var(--safe-bot))}
-
-/* Cards */
 .card{background:var(--surf);border-radius:var(--r);border:.5px solid var(--bd);padding:16px;margin-bottom:12px}
 .ctit{font-size:11px;font-weight:700;color:var(--mt);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
-
-/* Forms */
 label{font-size:13px;color:var(--mt);display:block;margin-bottom:4px;margin-top:8px}
 label:first-child{margin-top:0}
 input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{
@@ -49,62 +41,42 @@ input[type=text],input[type=number],input[type=date],input[type=time],select,tex
 }
 input:focus,select:focus{border-color:var(--g);background:var(--surf)}
 input[type=date],input[type=time]{color-scheme:light}
-
-/* Toggle pills */
 .tgrp{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .tp{padding:8px 14px;border:.5px solid var(--bd);border-radius:var(--rp);background:var(--bg);color:var(--tx);font-size:13px;cursor:pointer;transition:all .15s;user-select:none;-webkit-user-select:none;white-space:nowrap}
 .tp.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:600}
 .tp.on2{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
-
-/* Buttons */
 .btn{width:100%;padding:15px;border:none;border-radius:var(--r);font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:-.2px}
 .btn-p{background:var(--g);color:#fff}
 .btn-p:active{background:var(--gd)}
 .btn-g{background:var(--surf);color:var(--tx);border:.5px solid var(--bd)}
 .btn-g:active{background:var(--bg)}
 .btn-s{padding:10px 16px;font-size:14px;width:auto;font-weight:600}
-
-/* Bottom action bar */
 .bot-bar{padding:12px 14px;padding-bottom:max(14px,var(--safe-bot));background:var(--surf);border-top:.5px solid var(--bd);flex-shrink:0;display:flex;gap:8px}
-
-/* List items */
 .list-wrap{background:var(--surf);border-radius:var(--r);border:.5px solid var(--bd);overflow:hidden}
 .lrow{display:flex;align-items:center;padding:13px 14px;border-bottom:.5px solid var(--bd);cursor:pointer;gap:12px;transition:background .1s}
 .lrow:last-child{border-bottom:none}
 .lrow:active{background:var(--bg)}
-
-/* Badges */
 .badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
 .bA{background:#EAF3DE;color:#3B6D11}.bB{background:#E6F1FB;color:#0C447C}
 .bC{background:#FAEEDA;color:#633806}.bD{background:#FAECE7;color:#712B13}
 .bE{background:#FCEBEB;color:#791F1F}
-
-/* Tab bar */
 .tabs{display:flex;background:var(--surf);border-bottom:.5px solid var(--bd);flex-shrink:0;overflow-x:auto}
 .tabs::-webkit-scrollbar{display:none}
 .tab{padding:12px 14px;font-size:13px;color:var(--mt);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;font-weight:500;transition:color .15s}
 .tab.on{color:var(--g);border-color:var(--g);font-weight:700}
-
-/* Stat cards */
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .scard{background:var(--surf);border-radius:var(--rs);padding:13px;text-align:center;border:.5px solid var(--bd)}
 .scard .n{font-size:26px;font-weight:700;letter-spacing:-1px}
 .scard .l{font-size:11px;color:var(--mt);margin-top:2px}
-
-/* Bar chart */
 .brow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .btrk{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
 .bfill{height:100%;border-radius:4px;transition:width .4s}
-
-/* Wind compass */
 .wind-compass{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:6px;margin-bottom:12px}
 .wbtn{padding:10px 6px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:13px;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px}
 .wbtn.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
 .wbtn.center{background:var(--surf);font-size:12px;color:var(--mt)}
 .wbtn.center.on{background:var(--g);border-color:var(--g);color:#fff}
 .warrow{font-size:18px;line-height:1}
-
-/* Direction UI (arrow style) */
 .dir-ui{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:12px}
 .dir-btn{flex:1;padding:18px 8px;border:.5px solid var(--bd);background:var(--bg);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--mt)}
 .dir-btn:first-child{border-radius:var(--rs) 0 0 var(--rs)}
@@ -112,66 +84,41 @@ input[type=date],input[type=time]{color-scheme:light}
 .dir-btn.center-dir{border-left:none;border-right:none;flex:1.2;background:var(--surf)}
 .dir-btn.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:700}
 .dir-arrow{font-size:28px;line-height:1}
-
-/* Hole circle */
 .hcirc{width:38px;height:38px;border-radius:50%;background:var(--bg);border:.5px solid var(--bd);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;transition:all .2s}
 .hcirc.done{background:var(--g);color:#fff;border-color:var(--g)}
 .hcirc.cur{background:var(--amber);color:#fff;border-color:var(--amber)}
-
-/* Weather */
 .wx-grp{display:flex;gap:8px;margin-bottom:12px}
 .wx-btn{flex:1;padding:12px 6px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);cursor:pointer;text-align:center;transition:all .15s}
 .wx-btn.on{border-color:var(--g);background:var(--gl)}
 .wx-icon{font-size:24px;display:block;margin-bottom:4px}
 .wx-lbl{font-size:12px;color:var(--mt)}
 .wx-btn.on .wx-lbl{color:var(--gd);font-weight:700}
-
-/* Warn */
 .warn{font-size:12px;color:var(--red);margin-top:-8px;margin-bottom:10px}
-
-/* Copy area */
 .copy-area{width:100%;height:240px;font-size:12px;line-height:1.7;resize:none;background:var(--bg);border:.5px solid var(--bd);border-radius:var(--rs);padding:12px;font-family:inherit;color:var(--tx)}
-
-/* Home */
-.home-hero{padding:max(48px,calc(var(--safe-top)+36px)) 20px 20px;text-align:center}
-.hero-icon{font-size:56px;margin-bottom:10px;display:block}
-
-/* Section header */
+.home-hero{padding:24px 20px 16px;text-align:center}
+.hero-icon{font-size:42px;margin-bottom:4px;display:block;line-height:1}
 .sec-hdr{font-size:12px;font-weight:700;color:var(--mt);letter-spacing:.6px;text-transform:uppercase;padding:16px 14px 6px}
-
-/* Player tag */
 .ptag{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:var(--gl);border:.5px solid var(--g);border-radius:var(--rp);font-size:13px;color:var(--gd);margin:3px;cursor:pointer}
-.ptag.rm::after{content:'×';font-size:11px;opacity:.7}
-
-/* Score diff colors */
+.ptag.rm::after{content:'×';font-size:11px;opacity:.7;margin-left:4px}
 .s-eagle{color:var(--purple)}.s-birdie{color:var(--blue)}.s-par{color:var(--g)}
 .s-bogey{color:var(--red)}.s-dbl{color:var(--red);font-weight:900}
-
-/* Modal overlay */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:flex-end;justify-content:center}
-.modal{background:var(--surf);border-radius:var(--r) var(--r) 0 0;width:100%;max-width:430px;padding:20px 16px;padding-bottom:max(24px,var(--safe-bot));max-height:80dvh;overflow-y:auto}
-.modal-title{font-size:17px;font-weight:700;margin-bottom:16px}
-
-/* Settings club grid */
 .club-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
 .cg-btn{padding:10px 4px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);font-size:13px;cursor:pointer;text-align:center;transition:all .15s}
 .cg-btn.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:700}
-
-/* Progress */
 .prog-bar{height:3px;background:var(--bg);flex-shrink:0}
 .prog-fill{height:100%;background:var(--g);transition:width .3s}
+.player-slot-warn{font-size:12px;color:var(--mt);margin-top:6px}
 </style>
 </head>
 <body>
 <div id="app">
 
-<!-- ===== HOME ===== -->
 <div id="s-home" class="screen active">
-  <div class="body-nb" style="padding-top:0">
+  <div class="body-nb" style="padding-top:max(20px,var(--safe-top))">
     <div class="home-hero">
       <span class="hero-icon">⛳</span>
-      <div style="font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px">ゴルフ記録</div>
-      <div style="font-size:14px;color:var(--mt);margin-bottom:28px">ショット分析アプリ</div>
+      <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:2px">ゴルフ記録</div>
+      <div style="font-size:13px;color:var(--mt);margin-bottom:20px">ショット分析アプリ</div>
       <button class="btn btn-p" onclick="go('s-new-round')">＋ 新しいラウンドを開始</button>
       <button class="btn btn-g" style="margin-top:10px" onclick="go('s-settings')">⚙ 設定（クラブ・プレーヤー）</button>
     </div>
@@ -179,7 +126,6 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
 </div>
 
-<!-- ===== SETTINGS ===== -->
 <div id="s-settings" class="screen">
   <div class="hdr">
     <button class="back-btn" onclick="back('s-home')">← 戻る</button>
@@ -203,14 +149,12 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
 </div>
 
-<!-- ===== NEW ROUND ===== -->
 <div id="s-new-round" class="screen">
   <div class="hdr">
     <button class="back-btn" onclick="back('s-home')">← 戻る</button>
     <h1>ラウンド開始</h1>
   </div>
   <div class="body">
-    <!-- コース選択 -->
     <div class="card">
       <div class="ctit">コース選択（福岡県）</div>
       <select id="r-course-sel" onchange="onCourseChange()">
@@ -221,47 +165,47 @@ input[type=date],input[type=time]{color-scheme:light}
         <input type="text" id="r-course-manual" placeholder="例: ○○カントリークラブ">
       </div>
       <label>コース（前半/後半）</label>
-      <select id="r-course-half" onchange="onHalfChange()">
+      <select id="r-course-half">
         <option value="">-- コースを選択後に選択 --</option>
       </select>
     </div>
 
-    <!-- 日時 -->
-    <div class="card">
-      <div class="ctit">日時</div>
-      <label>プレー日</label>
-      <input type="date" id="r-date">
-      <label>スタート時間</label>
-      <input type="time" id="r-time" placeholder="例: 08:30">
-    </div>
+```
+<div class="card">
+  <div class="ctit">日時</div>
+  <label>プレー日</label>
+  <input type="date" id="r-date">
+  <label>スタート時間</label>
+  <input type="time" id="r-time" placeholder="例: 08:30">
+</div>
 
-    <!-- 天気 -->
-    <div class="card">
-      <div class="ctit">天気</div>
-      <div class="wx-grp" id="wx-grp">
-        <div class="wx-btn on" onclick="pickWx(this,'晴')"><span class="wx-icon">☀️</span><span class="wx-lbl">晴れ</span></div>
-        <div class="wx-btn" onclick="pickWx(this,'曇')"><span class="wx-icon">☁️</span><span class="wx-lbl">曇り</span></div>
-        <div class="wx-btn" onclick="pickWx(this,'雨')"><span class="wx-icon">🌧</span><span class="wx-lbl">雨</span></div>
-        <div class="wx-btn" onclick="pickWx(this,'雪')"><span class="wx-icon">❄️</span><span class="wx-lbl">雪</span></div>
-      </div>
-    </div>
-
-    <!-- 同伴者 -->
-    <div class="card">
-      <div class="ctit">同伴プレーヤー（任意）</div>
-      <div id="sel-players" style="margin-bottom:8px;min-height:28px"></div>
-      <div id="player-candidates" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px"></div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="r-player-inp" placeholder="名前を追加" style="margin-bottom:0;flex:1" onkeydown="if(event.key==='Enter')addPlayer()">
-        <button class="btn btn-g btn-s" onclick="addPlayer()">追加</button>
-      </div>
-    </div>
-
-    <button class="btn btn-p" onclick="startRound()">ラウンド開始 →</button>
+<div class="card">
+  <div class="ctit">天気</div>
+  <div class="wx-grp" id="wx-grp">
+    <div class="wx-btn on" onclick="pickWx(this,'晴')"><span class="wx-icon">☀️</span><span class="wx-lbl">晴れ</span></div>
+    <div class="wx-btn" onclick="pickWx(this,'曇')"><span class="wx-icon">☁️</span><span class="wx-lbl">曇り</span></div>
+    <div class="wx-btn" onclick="pickWx(this,'雨')"><span class="wx-icon">🌧</span><span class="wx-lbl">雨</span></div>
+    <div class="wx-btn" onclick="pickWx(this,'雪')"><span class="wx-icon">❄️</span><span class="wx-lbl">雪</span></div>
   </div>
 </div>
 
-<!-- ===== HOLES LIST ===== -->
+<div class="card">
+  <div class="ctit">同伴プレーヤー（最大3人・任意）</div>
+  <div id="sel-players" style="margin-bottom:8px;min-height:28px"></div>
+  <div class="player-slot-warn" id="player-slot-warn"></div>
+  <div id="player-candidates" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px"></div>
+  <div style="display:flex;gap:8px">
+    <input type="text" id="r-player-inp" placeholder="名前を追加" style="margin-bottom:0;flex:1" onkeydown="if(event.key==='Enter')addPlayer()">
+    <button class="btn btn-g btn-s" onclick="addPlayer()">追加</button>
+  </div>
+</div>
+
+<button class="btn btn-p" onclick="startRound()">ラウンド開始 →</button>
+```
+
+  </div>
+</div>
+
 <div id="s-holes" class="screen">
   <div class="hdr">
     <button class="back-btn" onclick="back('s-home')">← 一覧</button>
@@ -274,7 +218,6 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
 </div>
 
-<!-- ===== HOLE START ===== -->
 <div id="s-hole-start" class="screen">
   <div class="hdr">
     <button class="back-btn" onclick="back('s-holes')">← 戻る</button>
@@ -309,7 +252,6 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
 </div>
 
-<!-- ===== SHOTS LIST ===== -->
 <div id="s-shots" class="screen">
   <div class="hdr">
     <button class="back-btn" onclick="back('s-holes')">← 戻る</button>
@@ -327,20 +269,16 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
 </div>
 
-<!-- ===== ADD SHOT ===== -->
 <div id="s-add-shot" class="screen">
   <div class="hdr">
     <button class="back-btn" onclick="back('s-shots')">← 戻る</button>
     <h1 id="add-ttl">ショット追加</h1>
   </div>
   <div class="body">
-    <!-- 番手 -->
     <div class="card">
       <div class="ctit">番手</div>
       <div class="tgrp" id="sel-club"></div>
     </div>
-
-    <!-- 打ち出し方向 -->
     <div class="card">
       <div class="ctit">打ち出し方向</div>
       <div class="dir-ui">
@@ -358,8 +296,6 @@ input[type=date],input[type=time]{color-scheme:light}
         </div>
       </div>
     </div>
-
-    <!-- 自己評価 -->
     <div class="card">
       <div class="ctit">ショット自己評価</div>
       <div class="tgrp" id="sel-eval">
@@ -370,8 +306,6 @@ input[type=date],input[type=time]{color-scheme:light}
         <div class="tp" onclick="pick(this)" style="background:#FCEBEB;border-color:#F7C1C1;color:#791F1F">E 大ミス</div>
       </div>
     </div>
-
-    <!-- 球筋・ミス -->
     <div class="card">
       <div class="ctit">球筋</div>
       <div class="tgrp" id="sel-shape">
@@ -411,7 +345,6 @@ input[type=date],input[type=time]{color-scheme:light}
         <div class="tp" onclick="pick(this)">ペナルティ</div>
       </div>
     </div>
-
     <div class="card">
       <label>残りヤード（任意）</label>
       <input type="number" id="s-remain" placeholder="例: 150">
@@ -432,7 +365,6 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
 </div>
 
-<!-- ===== HOLE RESULT ===== -->
 <div id="s-result" class="screen">
   <div class="hdr">
     <button class="back-btn" onclick="back('s-shots')">← 戻る</button>
@@ -478,7 +410,6 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
 </div>
 
-<!-- ===== SUMMARY ===== -->
 <div id="s-summary" class="screen">
   <div class="hdr">
     <button class="back-btn" onclick="back('s-holes')">← 戻る</button>
@@ -498,16 +429,222 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
 </div>
 
-</div><!-- /#app -->
+</div>
 
-<script src="courses.js"></script>
 <script>
+// ========== 福岡県ゴルフ場データ ==========
+// 手元に実測データがあるのは伊都・ザ・クラシック等のみ。他はPar情報のみで距離は仮値（後で編集可能）
+const FUKUOKA = [
+  // ----- 糸島・前原エリア -----
+  { id:"ito", name:"伊都ゴルフ倶楽部", area:"糸島市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:374},{num:2,par:4,dist:382},{num:3,par:5,dist:520},
+        {num:4,par:3,dist:172},{num:5,par:4,dist:395},{num:6,par:4,dist:388},
+        {num:7,par:4,dist:365},{num:8,par:3,dist:168},{num:9,par:5,dist:492}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:385},{num:11,par:5,dist:505},{num:12,par:4,dist:378},
+        {num:13,par:4,dist:402},{num:14,par:3,dist:175},{num:15,par:4,dist:395},
+        {num:16,par:5,dist:525},{num:17,par:3,dist:165},{num:18,par:4,dist:414}]}
+    ]},
+  { id:"shima", name:"志摩シーサイドカンツリークラブ", area:"糸島市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,3,5,4,4,3,4,5,4][i],dist:[380,165,510,385,360,175,395,500,410][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,3,5,4,4][i],dist:[375,495,170,385,365,160,515,385,420][i]}))}
+    ]},
+  { id:"raizan", name:"福岡雷山ゴルフ倶楽部", area:"糸島市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,3,5,4,4][i],dist:[380,365,175,510,395,165,520,385,395][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[5,4,4,3,4,5,3,4,4][i],dist:[510,380,375,170,390,515,165,385,410][i]}))}
+    ]},
+  { id:"nijou", name:"二丈カントリークラブ", area:"糸島市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,3,5,4,4,3,4,5,4][i],dist:[370,170,500,380,360,165,390,510,400][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,4,3,5,4,4,3,5,4][i],dist:[370,385,160,505,370,385,175,510,395][i]}))}
+    ]},
+  // ----- 福岡市・那珂川・糟屋エリア -----
+  { id:"classic", name:"ザ・クラシックゴルフ倶楽部", area:"福岡市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[387,342,165,520,398,355,182,498,410][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,3,5,4,4,3,5,4,4][i],dist:[370,155,510,380,395,175,530,360,420][i]}))}
+    ]},
+  { id:"queens", name:"ザ・クイーンズヒルゴルフクラブ", area:"糸島市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[395,380,175,520,400,385,160,510,420][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,4,3,4,4,5,3,4][i],dist:[380,525,385,170,400,375,515,165,420][i]}))}
+    ]},
+  { id:"yusu", name:"油山ゴルフクラブ", area:"福岡市南区", courses:[] },
+  { id:"genkai", name:"玄海ゴルフクラブ", area:"宗像市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[5,4,3,4,4,3,5,4,4][i],dist:[510,360,175,385,370,160,525,395,380][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,3,5,4,4,3,5,4,4][i],dist:[375,168,498,362,390,172,520,378,405][i]}))}
+    ]},
+  { id:"daihaku", name:"大博多カントリー倶楽部", area:"那珂川市",
+    courses:[
+      { name:"桧コース", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[380,365,165,510,395,355,175,495,410][i]}))},
+      { name:"松コース", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,5,3,4,4,3,5,4,4][i],dist:[370,500,170,385,360,160,515,385,400][i]}))},
+      { name:"杉コース", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[5,4,3,4,4,5,3,4,4][i],dist:[505,375,170,380,365,510,165,385,395][i]}))}
+    ]},
+  { id:"chikushi", name:"筑紫ヶ丘ゴルフクラブ", area:"那珂川市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,3,5,4,4,5,3,4,4][i],dist:[368,158,495,375,362,508,172,385,395][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[5,4,3,4,4,3,5,4,4][i],dist:[502,372,165,380,358,175,515,388,420][i]}))}
+    ]},
+  { id:"hisayama", name:"福岡国際カントリークラブ", area:"宗像市",
+    courses:[
+      { name:"東コース", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,5,3,4,4,5,3,4,4][i],dist:[380,510,170,385,375,515,165,390,395][i]}))},
+      { name:"西コース", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,4,3,5,4,4,3,5,4][i],dist:[385,370,168,505,380,360,175,520,405][i]}))}
+    ]},
+  { id:"fkkcc", name:"福岡カンツリー倶楽部", area:"糟屋郡久山町",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[380,365,170,505,390,370,165,510,400][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,3,5,4,4][i],dist:[375,500,175,385,365,160,515,385,405][i]}))}
+    ]},
+  { id:"koga", name:"古賀ゴルフ・クラブ", area:"古賀市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[385,370,175,510,395,375,165,515,410][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,3,5,4,4,5,3,4,4][i],dist:[380,170,505,375,390,510,165,385,420][i]}))}
+    ]},
+  // ----- 筑紫・太宰府・小郡エリア -----
+  { id:"ogori", name:"小郡カンツリー倶楽部", area:"小郡市",
+    courses:[
+      { name:"東コース", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,5,3,4,4,3,5,4,4][i],dist:[380,510,170,385,365,160,505,385,400][i]}))},
+      { name:"中コース", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,4,3,5,4,4,3,5,4][i],dist:[385,370,165,510,390,380,175,515,405][i]}))},
+      { name:"西コース", holes:Array.from({length:9},(_,i)=>({num:i+19,par:[5,4,3,4,4,5,3,4,4][i],dist:[505,375,170,380,360,510,165,385,395][i]}))}
+    ]},
+  { id:"central-fk", name:"セントラル福岡ゴルフ倶楽部", area:"筑紫野市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,3,5,4,4,3,5,4,4][i],dist:[370,165,500,380,360,170,510,385,395][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,4,3,5,4,5,3,4,4][i],dist:[375,360,160,505,370,500,175,385,400][i]}))}
+    ]},
+  { id:"dazaifu", name:"太宰府ゴルフ倶楽部", area:"太宰府市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,5,3,4,4,3,4,5,4][i],dist:[375,500,165,380,355,170,385,510,395][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,4,3,5,4,4,3,5,4][i],dist:[370,385,175,505,375,360,165,515,400][i]}))}
+    ]},
+  { id:"satsuki", name:"皐月ゴルフ倶楽部 天拝コース", area:"筑紫野市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,3,5,4,4][i],dist:[370,360,165,495,380,155,500,385,395][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,4,3,5,4][i],dist:[375,500,170,385,360,370,160,510,400][i]}))}
+    ]},
+  { id:"kyoto-cc", name:"京都カントリー倶楽部", area:"京都郡みやこ町",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,3,5,4,4][i],dist:[380,370,175,510,385,160,515,390,400][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,4,3,4,4,5,3,4][i],dist:[380,505,375,170,395,365,520,165,410][i]}))}
+    ]},
+  // ----- 久留米・県南エリア -----
+  { id:"kurume", name:"久留米カントリークラブ", area:"久留米市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,5,3,4,4,3,5,4,4][i],dist:[372,502,162,378,365,175,510,385,398][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,3,5,4,4,5,3,4,4][i],dist:[368,168,508,375,382,498,172,388,415][i]}))}
+    ]},
+  { id:"omuta", name:"大牟田カントリークラブ", area:"大牟田市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[375,358,168,505,382,368,162,512,392][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,3,5,4,4][i],dist:[378,498,170,372,385,158,520,368,408][i]}))}
+    ]},
+  { id:"akizuki", name:"秋月カントリークラブ", area:"朝倉市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,3,4,5,4][i],dist:[365,355,160,490,375,150,380,495,390][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,3,5,4,4,5,3,4,4][i],dist:[370,165,500,370,380,495,160,375,390][i]}))}
+    ]},
+  { id:"ukiha", name:"浮羽カントリークラブ", area:"うきは市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,5,3,4,4,3,5,4,4][i],dist:[375,495,165,380,360,170,500,385,395][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,4,3,5,4,3,5,4,4][i],dist:[370,380,160,505,375,175,510,385,400][i]}))}
+    ]},
+  { id:"yamedarl", name:"八女上陽ゴルフ倶楽部", area:"八女市", courses:[] },
+  { id:"fks", name:"福岡サンレイクゴルフ倶楽部", area:"朝倉市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[378,368,170,505,390,365,165,515,400][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,5,3,4,4][i],dist:[385,500,172,380,362,510,168,388,405][i]}))}
+    ]},
+  // ----- 飯塚・田川・嘉穂エリア -----
+  { id:"aso", name:"麻生飯塚ゴルフ倶楽部", area:"嘉穂郡桂川町",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[390,375,175,520,400,385,170,525,410][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,3,5,4,4][i],dist:[385,515,172,380,395,168,530,380,420][i]}))}
+    ]},
+  { id:"kaho", name:"かほゴルフクラブ", area:"嘉麻市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,3,5,4,4][i],dist:[370,360,165,495,375,160,505,380,390][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,4,3,5,4][i],dist:[375,500,170,380,365,370,165,510,395][i]}))}
+    ]},
+  { id:"fukuoka-lake", name:"福岡レイクサイドカントリークラブ", area:"飯塚市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[375,365,170,500,385,370,165,505,395][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,3,5,4,4,5,3,4,4][i],dist:[380,175,510,375,390,500,168,385,410][i]}))}
+    ]},
+  // ----- 北九州・京築エリア -----
+  { id:"moji", name:"門司ゴルフ倶楽部", area:"北九州市門司区",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[375,362,170,500,385,365,165,505,395][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,3,5,4,4][i],dist:[380,510,172,378,388,165,515,380,410][i]}))}
+    ]},
+  { id:"kitakyushu", name:"北九州カントリー倶楽部", area:"北九州市",
+    courses:[
+      { name:"東コース", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[380,365,168,505,388,370,165,510,398][i]}))},
+      { name:"中コース", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,3,5,4,4][i],dist:[375,500,170,380,360,175,515,385,408][i]}))},
+      { name:"西コース", holes:Array.from({length:9},(_,i)=>({num:i+19,par:[5,4,3,4,4,5,3,4,4][i],dist:[508,378,172,385,368,510,165,388,400][i]}))}
+    ]},
+  { id:"katsuyama", name:"勝山御所カントリークラブ", area:"京都郡みやこ町",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,3,5,4,4][i],dist:[372,360,168,498,378,155,500,378,390][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,3,5,4,4,4,3,5,4][i],dist:[375,170,505,370,385,362,165,508,398][i]}))}
+    ]},
+  { id:"mission", name:"ミッションバレーゴルフクラブ", area:"北九州市小倉南区",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,5,3,4,4,3,5,4,4][i],dist:[382,520,175,390,370,168,528,395,405][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,4,3,5,4,4,3,5,4][i],dist:[388,375,172,515,395,378,165,525,415][i]}))}
+    ]},
+  { id:"sungolf", name:"SUNGOLF&RESORTS ワカミヤ", area:"宮若市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,3,5,4,4][i],dist:[378,365,170,508,385,168,515,388,400][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,4,3,5,4][i],dist:[375,500,165,380,368,372,175,510,398][i]}))}
+    ]},
+  { id:"moonlake", name:"ムーンレイクゴルフクラブ 鞍手コース", area:"鞍手郡鞍手町",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[380,368,170,510,390,375,168,515,405][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,3,5,4,4][i],dist:[378,505,172,380,365,175,510,388,410][i]}))}
+    ]},
+  { id:"kitakyushu-c", name:"北九州センチュリーゴルフ倶楽部", area:"北九州市八幡西区", courses:[] },
+  { id:"fukuoka-c", name:"福岡センチュリーゴルフ倶楽部", area:"田川郡福智町",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[5,4,4,3,4,5,3,4,4][i],dist:[525,400,385,175,395,515,168,388,415][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,4,3,5,4,4,3,5,4][i],dist:[395,385,172,520,405,388,175,530,420][i]}))}
+    ]},
+  { id:"yasu", name:"夜須高原カントリークラブ", area:"朝倉郡筑前町",
+    courses:[
+      { name:"東コース", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,5,4][i],dist:[385,370,172,515,395,378,168,520,410][i]}))},
+      { name:"西コース", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,3,5,4,4][i],dist:[380,510,170,385,365,175,508,380,405][i]}))},
+      { name:"南コース", holes:Array.from({length:9},(_,i)=>({num:i+19,par:[5,4,3,4,4,5,3,4,4][i],dist:[515,385,165,380,370,505,172,388,400][i]}))}
+    ]},
+  { id:"shiranui", name:"不知火ゴルフ場", area:"大川市", courses:[] },
+  { id:"nishinihon", name:"西日本カントリークラブ", area:"飯塚市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,5,3,4,4,3,5,4,4][i],dist:[378,510,172,385,368,170,515,390,405][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,4,3,5,4,4,3,5,4][i],dist:[385,378,168,520,395,382,175,525,415][i]}))}
+    ]},
+  { id:"new-ui", name:"NEWユーアイゴルフクラブ", area:"宗像市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,3,5,4,4][i],dist:[370,360,165,500,375,155,505,380,390][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,4,3,5,4][i],dist:[375,500,168,378,365,370,170,510,395][i]}))}
+    ]},
+  { id:"ryuou", name:"皐月ゴルフ倶楽部 竜王コース", area:"うきは市",
+    courses:[
+      { name:"OUT", holes:Array.from({length:9},(_,i)=>({num:i+1,par:[4,4,3,5,4,4,3,4,4][i],dist:[368,355,160,495,378,365,165,378,388][i]}))},
+      { name:"IN", holes:Array.from({length:9},(_,i)=>({num:i+10,par:[4,5,3,4,4,3,5,4,4][i],dist:[372,498,168,372,382,158,505,380,392][i]}))}
+    ]},
+  { id:"manual", name:"手動入力（コース名を入力）", area:"その他", courses:[] }
+];
+
 // ========== STATE ==========
-const KEY = 'golf2';
+const KEY = 'golf3';
 let D = {
   rounds: [],
-  settings: { clubs: ['DR','3W','UT','5I','6I','7I','8I','9I','PW','AW','SW','PT'], savedPlayers: [] },
-  ri: -1, hi: 0, editing: null, selWx: '晴', selDir: '', selWind: '無風'
+  settings: { clubs: ['DR','3W','UT','5I','6I','7I','8I','9I','PW','AW','52°','56°','PT'], savedPlayers: [] },
+  ri: -1, hi: 0, editing: null, selWx: '晴', selDir: '', selWind: '無風',
+  _selectedPlayers: []
 };
 
 function loadData() {
@@ -517,14 +654,11 @@ function loadData() {
     if(saved.settings) D.settings = Object.assign(D.settings, saved.settings);
   } catch(e) {}
 }
-function sv() {
-  localStorage.setItem(KEY, JSON.stringify({ rounds: D.rounds, settings: D.settings }));
-}
+function sv() { localStorage.setItem(KEY, JSON.stringify({ rounds: D.rounds, settings: D.settings })); }
 const $ = id => document.getElementById(id);
 const rnd = () => D.rounds[D.ri];
 const hole = () => rnd().holes[D.hi];
 
-// ========== NAVIGATION ==========
 function go(id) {
   const prev = document.querySelector('.screen.active');
   if(prev) { prev.classList.add('left'); prev.classList.remove('active'); }
@@ -549,21 +683,23 @@ function onScreen(id) {
   if(id==='s-new-round') initNewRound();
 }
 
-// ========== PICKER HELPERS ==========
 function pick(el) {
   el.parentElement.querySelectorAll('.tp').forEach(b => b.classList.remove('on'));
   el.classList.add('on');
 }
 function getSel(id) {
   const el = document.querySelector('#'+id+' .tp.on');
-  return el ? el.textContent.split(' ')[0] : '';
+  if(!el) return '';
+  const t = el.textContent.trim();
+  // "A 最高" のような場合は最初の単語のみ返す
+  return t.split(/\s+/)[0];
 }
 function clearSel(...ids) {
   ids.forEach(id => document.querySelectorAll('#'+id+' .tp').forEach(b => b.classList.remove('on')));
 }
 function setSel(id, val) {
   document.querySelectorAll('#'+id+' .tp').forEach(b => {
-    if(b.textContent.split(' ')[0] === val) b.classList.add('on');
+    if(b.textContent.trim().split(/\s+/)[0] === val) b.classList.add('on');
   });
 }
 function pickWx(el, val) {
@@ -585,18 +721,16 @@ function pickDir(val) {
 }
 
 // ========== SETTINGS ==========
-const ALL_CLUBS = ['DR','3W','5W','UT','3I','4I','5I','6I','7I','8I','9I','PW','AW','SW','LW','PT'];
+const ALL_CLUBS = ['DR','3W','5W','UT','3I','4I','5I','6I','7I','8I','9I','PW','AW','48°','50°','52°','54°','56°','58°','60°','PT'];
 
 function renderSettings() {
   const grid = $('club-setting-grid');
   grid.innerHTML = ALL_CLUBS.map(c =>
-    `<div class="cg-btn ${D.settings.clubs.includes(c)?'on':''}" onclick="toggleClub(this,'${c}')">${c}</div>`
+    `<div class="cg-btn ${D.settings.clubs.includes(c)?'on':''}" onclick="toggleClub(this)">${c}</div>`
   ).join('');
   renderSavedPlayers();
 }
-function toggleClub(el, c) {
-  el.classList.toggle('on');
-}
+function toggleClub(el) { el.classList.toggle('on'); }
 function addSavedPlayer() {
   const inp = $('new-player-inp');
   const name = inp.value.trim();
@@ -622,85 +756,117 @@ function saveSettings() {
 
 // ========== NEW ROUND ==========
 function initNewRound() {
-  // コース選択
   const csel = $('r-course-sel');
   csel.innerHTML = '<option value="">-- コースを選択 --</option>' +
-    FUKUOKA_COURSES.map(c => `<option value="${c.id}">${c.name}（${c.area}）</option>`).join('');
+    FUKUOKA.map(c => `<option value="${c.id}">${c.name}（${c.area}）</option>`).join('');
 
-  // 今日の日付をセット
   const today = new Date();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth()+1).padStart(2,'0');
   const dd = String(today.getDate()).padStart(2,'0');
   $('r-date').value = `${yyyy}-${mm}-${dd}`;
 
-  // 同伴プレーヤー
   D._selectedPlayers = [];
   $('sel-players').innerHTML = '';
+  updatePlayerSlotWarn();
   renderPlayerCandidates();
 }
 function onCourseChange() {
   const id = $('r-course-sel').value;
   const half = $('r-course-half');
   const manual = $('r-manual-name');
-  const course = FUKUOKA_COURSES.find(c => c.id === id);
+  const course = FUKUOKA.find(c => c.id === id);
   half.innerHTML = '<option value="">-- 選択 --</option>';
   manual.style.display = 'none';
   if(!course) return;
   if(id === 'manual') { manual.style.display='block'; return; }
+  if(!course.courses.length) {
+    half.innerHTML += '<option value="-1">このコースは詳細データ未登録（18ホール自動生成）</option>';
+    return;
+  }
   course.courses.forEach((c,i) => {
     half.innerHTML += `<option value="${i}">${c.name}</option>`;
   });
+  // 2コースあれば自動でアウト＋イン組み合わせオプションも追加
+  if(course.courses.length >= 2) {
+    half.innerHTML += `<option value="combo-01">${course.courses[0].name} → ${course.courses[1].name}（18H）</option>`;
+  }
 }
-function onHalfChange() {}
 
-// Player
 function renderPlayerCandidates() {
   const cands = $('player-candidates');
-  cands.innerHTML = D.settings.savedPlayers
+  const full = D._selectedPlayers.length >= 3;
+  cands.innerHTML = full ? '' : D.settings.savedPlayers
     .filter(p => !D._selectedPlayers.includes(p))
-    .map(p => `<span class="ptag" onclick="addPlayerByName('${p}')">${p} ＋</span>`).join('');
+    .map(p => `<span class="ptag" onclick="addPlayerByName('${p.replace(/'/g,"\\'")}')">${p} ＋</span>`).join('');
+}
+function updatePlayerSlotWarn() {
+  const c = D._selectedPlayers.length;
+  $('player-slot-warn').textContent = c >= 3 ? '※最大3人まで選択できます' : `現在 ${c}人選択中（1〜3人まで）`;
 }
 function addPlayer() {
   const inp = $('r-player-inp');
   const name = inp.value.trim();
-  if(!name || D._selectedPlayers.includes(name)) { inp.value=''; return; }
+  if(!name) return;
+  if(D._selectedPlayers.includes(name)) { inp.value=''; return; }
+  if(D._selectedPlayers.length >= 3) { inp.value=''; alert('同伴者は最大3人までです'); return; }
   D._selectedPlayers.push(name);
   if(!D.settings.savedPlayers.includes(name)) D.settings.savedPlayers.push(name);
   inp.value = '';
   updateSelectedPlayers();
 }
 function addPlayerByName(name) {
-  if(!D._selectedPlayers.includes(name)) D._selectedPlayers.push(name);
+  if(D._selectedPlayers.includes(name)) return;
+  if(D._selectedPlayers.length >= 3) { alert('同伴者は最大3人までです'); return; }
+  D._selectedPlayers.push(name);
   updateSelectedPlayers();
-  renderPlayerCandidates();
 }
 function removePlayer(i) {
   D._selectedPlayers.splice(i,1);
   updateSelectedPlayers();
-  renderPlayerCandidates();
 }
 function updateSelectedPlayers() {
   $('sel-players').innerHTML = D._selectedPlayers.map((p,i) =>
     `<span class="ptag rm" onclick="removePlayer(${i})">${p}</span>`
   ).join('');
+  updatePlayerSlotWarn();
   renderPlayerCandidates();
 }
 
 function startRound() {
   const courseId = $('r-course-sel').value;
-  const course = FUKUOKA_COURSES.find(c => c.id === courseId);
-  const halfIdx = parseInt($('r-course-half').value);
+  const course = FUKUOKA.find(c => c.id === courseId);
+  const halfVal = $('r-course-half').value;
   const courseName = courseId==='manual' ? ($('r-course-manual').value||'コース') :
                      course ? course.name : 'コース';
-  const halfName = (course && !isNaN(halfIdx)) ? course.courses[halfIdx].name : '';
-
-  // ホールデータ生成
+  let halfName = '';
   let holes;
-  if(course && course.id !== 'manual' && !isNaN(halfIdx) && course.courses[halfIdx]) {
-    holes = course.courses[halfIdx].holes.map(h => ({
-      num: h.num, par: h.par, dist: h.dist, wind: '無風', shots: [], result: null
-    }));
+
+  if(course && course.id !== 'manual' && course.courses.length) {
+    if(halfVal === 'combo-01') {
+      halfName = `${course.courses[0].name}→${course.courses[1].name}`;
+      holes = [...course.courses[0].holes, ...course.courses[1].holes].map(h => ({
+        num: h.num, par: h.par, dist: h.dist, wind: '無風', shots: [], result: null
+      }));
+    } else {
+      const halfIdx = parseInt(halfVal);
+      if(!isNaN(halfIdx) && halfIdx >= 0 && course.courses[halfIdx]) {
+        halfName = course.courses[halfIdx].name;
+        holes = course.courses[halfIdx].holes.map(h => ({
+          num: h.num, par: h.par, dist: h.dist, wind: '無風', shots: [], result: null
+        }));
+        // 9ホールしかない場合は18ホールまで番号を埋める
+        if(holes.length === 9) {
+          const startNum = holes[holes.length-1].num + 1;
+          for(let i=0;i<9;i++) {
+            holes.push({num:startNum+i, par:4, dist:0, wind:'無風', shots:[], result:null});
+          }
+        }
+      } else {
+        // 詳細データなしの場合
+        holes = Array.from({length:18},(_,i) => ({num:i+1,par:4,dist:0,wind:'無風',shots:[],result:null}));
+      }
+    }
   } else {
     holes = Array.from({length:18},(_,i) => ({num:i+1,par:4,dist:0,wind:'無風',shots:[],result:null}));
   }
@@ -720,7 +886,6 @@ function startRound() {
   go('s-holes');
 }
 
-// ========== HOME ==========
 function renderHome() {
   const el = $('home-hist');
   if(!D.rounds.length) { el.innerHTML=''; return; }
@@ -737,7 +902,7 @@ function renderHome() {
           <div>
             <div style="font-weight:700;font-size:15px">${r.course}${r.half?' '+r.half:''}</div>
             <div style="font-size:12px;color:var(--mt);margin-top:2px">${r.date||''}${r.time?' '+r.time:''} ${wxIcon}</div>
-            ${r.players&&r.players.length?`<div style="font-size:12px;color:var(--mt)">${r.players.join('・')}</div>`:''}
+            ${r.players&&r.players.length?`<div style="font-size:12px;color:var(--mt)">同伴: ${r.players.join('・')}</div>`:''}
           </div>
           <div style="text-align:right;flex-shrink:0">
             <div style="font-size:28px;font-weight:800;letter-spacing:-1px">${tot||'−'}</div>
@@ -750,7 +915,6 @@ function renderHome() {
 }
 function loadRound(i) { D.ri=i; go('s-holes'); }
 
-// ========== HOLES ==========
 function renderHoles() {
   const r = rnd(); if(!r) return;
   $('holes-ttl').textContent = r.course+(r.half?' '+r.half:'');
@@ -795,13 +959,15 @@ function openHole(i) {
   clearSel('sel-par');
   setSel('sel-par', String(h.par));
   $('h-dist').value = h.dist||'';
-  // 風リセット
   document.querySelectorAll('#wind-compass .wbtn').forEach(b => b.classList.remove('on'));
-  document.querySelectorAll('#wind-compass .wbtn').forEach(b => {
-    if(b.querySelector('div:last-child') && b.querySelector('div:last-child').textContent.includes(h.wind||'無風')) b.classList.add('on');
-  });
   const centerBtn = document.querySelector('#wind-compass .wbtn.center');
   if(!h.wind||h.wind==='無風') centerBtn.classList.add('on');
+  else {
+    document.querySelectorAll('#wind-compass .wbtn').forEach(b => {
+      const lbl = b.querySelector('div:last-child');
+      if(lbl && (h.wind.includes(lbl.textContent) || lbl.textContent.includes(h.wind.substring(0,2)))) b.classList.add('on');
+    });
+  }
   D.selWind = h.wind||'無風';
   go('s-hole-start');
 }
@@ -820,7 +986,6 @@ function startHole() {
   go('s-shots');
 }
 
-// ========== SHOTS ==========
 function renderShots() {
   const h = hole(); if(!h) return;
   $('shots-ttl').textContent = `${h.num}H · Par${h.par}`;
@@ -888,10 +1053,9 @@ function editShot(i) {
 }
 
 function saveShot() {
-  const ev = getSel('sel-eval');
   const shot = {
     club: getSel('sel-club'), dir: D.selDir,
-    eval: ev, shape: getSel('sel-shape'),
+    eval: getSel('sel-eval'), shape: getSel('sel-shape'),
     miss: getSel('sel-miss'), land: getSel('sel-land'), lie: getSel('sel-lie'),
     remain: parseInt($('s-remain').value)||0,
     dist: parseInt($('s-dist').value)||0,
@@ -904,7 +1068,6 @@ function saveShot() {
   back('s-shots');
 }
 
-// ========== RESULT ==========
 function chkScore() {
   const h = hole();
   const auto = h.shots.length;
@@ -925,14 +1088,12 @@ function saveResult() {
   clearSel('sel-on','sel-putt','sel-p1');
   ['h-score','p1d','p1m'].forEach(id => $(id).value='');
   $('score-warn').style.display='none';
-
   const hs = rnd().holes;
   const next = hs.findIndex((h2,i) => i > D.hi && !h2.result);
   if(next !== -1) { openHole(next); }
   else { back('s-holes'); }
 }
 
-// ========== SUMMARY ==========
 function showTab(id, el) {
   ['t-score','t-detail','t-analysis','t-copy'].forEach(t => $(t).style.display='none');
   $(id).style.display='block';
@@ -945,7 +1106,6 @@ function renderSummary() {
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('on',i===0));
   ['t-detail','t-analysis','t-copy'].forEach(t => $(t).style.display='none');
   $('t-score').style.display='block';
-
   const r = rnd(); if(!r) return;
   const done = r.holes.filter(h=>h.result);
   const tot = done.reduce((s,h)=>s+h.result.score,0);
@@ -1077,37 +1237,35 @@ function buildCopy() {
   const top=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,3);
   if(top.length) t+=`主なミス：${top.map(([k,v])=>k+'('+v+'回)').join('、')}\n`;
   t+=`\n以上のデータをもとに、このラウンドの傾向と改善点を分析してください。`;
-
   $('t-copy').innerHTML=`<div class="card">
     <div class="ctit" style="margin-bottom:8px">ChatGPT用レポート</div>
     <textarea class="copy-area" id="copy-ta" readonly>${t}</textarea>
-    <button class="btn btn-p" style="margin-top:10px" onclick="doCopy()">📋 全文コピー</button>
+
+```
+<button class="btn btn-p" style="margin-top:10px" onclick="doCopy()">📋 全文コピー</button>
+```
+
   </div>`;
 }
 
 function doCopy() {
-  const ta = $('copy-ta');
-  const text = ta.value;
-  navigator.clipboard.writeText(text).then(()=>{
-    const btn = document.querySelector('#t-copy .btn');
-    btn.textContent='✅ コピーしました！';
-    setTimeout(()=>btn.textContent='📋 全文コピー',2500);
-  }).catch(()=>{
-    ta.select(); document.execCommand('copy');
-    const btn = document.querySelector('#t-copy .btn');
-    btn.textContent='✅ コピーしました！';
-    setTimeout(()=>btn.textContent='📋 全文コピー',2500);
-  });
+const ta = $(‘copy-ta’);
+const text = ta.value;
+navigator.clipboard.writeText(text).then(()=>{
+const btn = document.querySelector(’#t-copy .btn’);
+btn.textContent=‘✅ コピーしました！’;
+setTimeout(()=>btn.textContent=‘📋 全文コピー’,2500);
+}).catch(()=>{
+ta.select(); document.execCommand(‘copy’);
+const btn = document.querySelector(’#t-copy .btn’);
+btn.textContent=‘✅ コピーしました！’;
+setTimeout(()=>btn.textContent=‘📋 全文コピー’,2500);
+});
 }
 
-// ========== PWA ==========
-if('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(()=>{});
-}
-
-// ========== INIT ==========
 loadData();
 renderHome();
 </script>
+
 </body>
 </html>
