@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ゴルフ記録">
+<title>ゴルフ記録</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+:root{
+  --g:#1D9E75;--gd:#0F6E56;--gl:#E1F5EE;
+  --red:#E24B4A;--blue:#378ADD;--amber:#BA7517;--purple:#534AB7;
+  --bg:#F5F5F0;--surf:#fff;--bd:#e2e0da;--bd2:#ccc9c0;
+  --tx:#1a1a18;--mt:#888780;--sub:#b4b2a9;
+  --r:14px;--rs:8px;--rp:24px;
+  --safe-top:env(safe-area-inset-top);
+  --safe-bot:env(safe-area-inset-bottom);
+}
+html,body{height:100%;background:var(--bg);font-family:-apple-system,'Hiragino Sans',sans-serif;color:var(--tx);overflow:hidden;font-size:16px}
+#app{height:100dvh;display:flex;flex-direction:column;max-width:430px;margin:0 auto;overflow:hidden;position:relative}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);will-change:transform;transition:transform .32s cubic-bezier(.4,0,.2,1);transform:translateX(100%);overflow:hidden}
+.screen.active{transform:translateX(0)}
+.screen.left{transform:translateX(-25%)}
+.hdr{background:var(--surf);border-bottom:.5px solid var(--bd);display:flex;align-items:center;gap:8px;flex-shrink:0;padding:12px 14px;padding-top:max(12px,var(--safe-top))}
+.hdr h1{font-size:17px;font-weight:700;flex:1;letter-spacing:-.3px}
+.back-btn{background:none;border:none;color:var(--g);font-size:15px;padding:6px 8px;cursor:pointer;font-family:inherit;font-weight:500;flex-shrink:0}
+.hdr-btn{background:none;border:.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-size:13px;padding:6px 10px;cursor:pointer;font-family:inherit}
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;padding-bottom:max(24px,var(--safe-bot))}
+.body-nb{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:max(24px,var(--safe-bot))}
+.card{background:var(--surf);border-radius:var(--r);border:.5px solid var(--bd);padding:16px;margin-bottom:12px}
+.ctit{font-size:11px;font-weight:700;color:var(--mt);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+label{font-size:13px;color:var(--mt);display:block;margin-bottom:4px;margin-top:8px}
+label:first-child{margin-top:0}
+input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{
+  width:100%;padding:11px 13px;border:.5px solid var(--bd);border-radius:var(--rs);
+  background:var(--bg);color:var(--tx);font-size:16px;margin-bottom:10px;
+  outline:none;-webkit-appearance:none;font-family:inherit;
+}
+input:focus,select:focus{border-color:var(--g);background:var(--surf)}
+input[type=date],input[type=time]{color-scheme:light}
+.tgrp{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tp{padding:8px 14px;border:.5px solid var(--bd);border-radius:var(--rp);background:var(--bg);color:var(--tx);font-size:13px;cursor:pointer;transition:all .15s;user-select:none;-webkit-user-select:none;white-space:nowrap}
+.tp.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:600}
+.tp.on2{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.btn{width:100%;padding:15px;border:none;border-radius:var(--r);font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:-.2px}
+.btn-p{background:var(--g);color:#fff}
+.btn-p:active{background:var(--gd)}
+.btn-g{background:var(--surf);color:var(--tx);border:.5px solid var(--bd)}
+.btn-g:active{background:var(--bg)}
+.btn-s{padding:10px 16px;font-size:14px;width:auto;font-weight:600}
+.bot-bar{padding:12px 14px;padding-bottom:max(14px,var(--safe-bot));background:var(--surf);border-top:.5px solid var(--bd);flex-shrink:0;display:flex;gap:8px}
+.list-wrap{background:var(--surf);border-radius:var(--r);border:.5px solid var(--bd);overflow:hidden}
+.lrow{display:flex;align-items:center;padding:13px 14px;border-bottom:.5px solid var(--bd);cursor:pointer;gap:12px;transition:background .1s}
+.lrow:last-child{border-bottom:none}
+.lrow:active{background:var(--bg)}
+.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.bA{background:#EAF3DE;color:#3B6D11}.bB{background:#E6F1FB;color:#0C447C}
+.bC{background:#FAEEDA;color:#633806}.bD{background:#FAECE7;color:#712B13}
+.bE{background:#FCEBEB;color:#791F1F}
+.tabs{display:flex;background:var(--surf);border-bottom:.5px solid var(--bd);flex-shrink:0;overflow-x:auto}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 14px;font-size:13px;color:var(--mt);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;font-weight:500;transition:color .15s}
+.tab.on{color:var(--g);border-color:var(--g);font-weight:700}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.scard{background:var(--surf);border-radius:var(--rs);padding:13px;text-align:center;border:.5px solid var(--bd)}
+.scard .n{font-size:26px;font-weight:700;letter-spacing:-1px}
+.scard .l{font-size:11px;color:var(--mt);margin-top:2px}
+.brow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.btrk{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.bfill{height:100%;border-radius:4px;transition:width .4s}
+.wind-compass{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:6px;margin-bottom:12px}
+.wbtn{padding:10px 6px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:13px;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px}
+.wbtn.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+.wbtn.center{background:var(--surf);font-size:12px;color:var(--mt)}
+.wbtn.center.on{background:var(--g);border-color:var(--g);color:#fff}
+.warrow{font-size:18px;line-height:1}
+.dir-ui{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:12px}
+.dir-btn{flex:1;padding:18px 8px;border:.5px solid var(--bd);background:var(--bg);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--mt)}
+.dir-btn:first-child{border-radius:var(--rs) 0 0 var(--rs)}
+.dir-btn:last-child{border-radius:0 var(--rs) var(--rs) 0}
+.dir-btn.center-dir{border-left:none;border-right:none;flex:1.2;background:var(--surf)}
+.dir-btn.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:700}
+.dir-arrow{font-size:28px;line-height:1}
+.hcirc{width:38px;height:38px;border-radius:50%;background:var(--bg);border:.5px solid var(--bd);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;transition:all .2s}
+.hcirc.done{background:var(--g);color:#fff;border-color:var(--g)}
+.hcirc.cur{background:var(--amber);color:#fff;border-color:var(--amber)}
+.wx-grp{display:flex;gap:8px;margin-bottom:12px}
+.wx-btn{flex:1;padding:12px 6px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);cursor:pointer;text-align:center;transition:all .15s}
+.wx-btn.on{border-color:var(--g);background:var(--gl)}
+.wx-icon{font-size:24px;display:block;margin-bottom:4px}
+.wx-lbl{font-size:12px;color:var(--mt)}
+.wx-btn.on .wx-lbl{color:var(--gd);font-weight:700}
+.warn{font-size:12px;color:var(--red);margin-top:-8px;margin-bottom:10px}
+.copy-area{width:100%;height:240px;font-size:12px;line-height:1.7;resize:none;background:var(--bg);border:.5px solid var(--bd);border-radius:var(--rs);padding:12px;font-family:inherit;color:var(--tx)}
+.home-hero{padding:24px 20px 16px;text-align:center}
+.hero-icon{font-size:42px;margin-bottom:4px;display:block;line-height:1}
+.sec-hdr{font-size:12px;font-weight:700;color:var(--mt);letter-spacing:.6px;text-transform:uppercase;padding:16px 14px 6px}
+.ptag{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:var(--gl);border:.5px solid var(--g);border-radius:var(--rp);font-size:13px;color:var(--gd);margin:3px;cursor:pointer}
+.ptag.rm::after{content:'×';font-size:11px;opacity:.7;margin-left:4px}
+.s-eagle{color:var(--purple)}.s-birdie{color:var(--blue)}.s-par{color:var(--g)}
+.s-bogey{color:var(--red)}.s-dbl{color:var(--red);font-weight:900}
+.club-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.cg-btn{padding:10px 4px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);font-size:13px;cursor:pointer;text-align:center;transition:all .15s}
+.cg-btn.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:700}
+.prog-bar{height:3px;background:var(--bg);flex-shrink:0}
+.prog-fill{height:100%;background:var(--g);transition:width .3s}
+.player-slot-warn{font-size:12px;color:var(--mt);margin-top:6px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="s-home" class="screen active">
+  <div class="body-nb" style="padding-top:max(20px,var(--safe-top))">
+    <div class="home-hero">
+      <span class="hero-icon">⛳</span>
+      <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:2px">ゴルフ記録</div>
+      <div style="font-size:13px;color:var(--mt);margin-bottom:20px">ショット分析アプリ</div>
+      <button class="btn btn-p" onclick="go('s-new-round')">＋ 新しいラウンドを開始</button>
+      <button class="btn btn-g" style="margin-top:10px" onclick="go('s-settings')">⚙ 設定（クラブ・プレーヤー）</button>
+    </div>
+    <div id="home-hist"></div>
+  </div>
+</div>
+
+<div id="s-settings" class="screen">
+  <div class="hdr">
+    <button class="back-btn" onclick="back('s-home')">← 戻る</button>
+    <h1>設定</h1>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="ctit">使用クラブを選択（使うものだけON）</div>
+      <div class="club-grid" id="club-setting-grid"></div>
+      <div style="font-size:12px;color:var(--mt)">選択したクラブのみショット入力画面に表示されます</div>
+    </div>
+    <div class="card">
+      <div class="ctit">よく一緒にラウンドする人</div>
+      <div id="saved-players" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="new-player-inp" placeholder="プレーヤー名を追加" style="margin-bottom:0;flex:1">
+        <button class="btn btn-g btn-s" onclick="addSavedPlayer()">追加</button>
+      </div>
+    </div>
+    <button class="btn btn-p" onclick="saveSettings()">設定を保存</button>
+  </div>
+</div>
+
+<div id="s-new-round" class="screen">
+  <div class="hdr">
+    <button class="back-btn" onclick="back('s-home')">← 戻る</button>
+    <h1>ラウンド開始</h1>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="ctit">コース選択（福岡県）</div>
+      <select id="r-course-sel" onchange="onCourseChange()">
+        <option value="">-- コースを選択 --</option>
+      </select>
+      <div id="r-manual-name" style="display:none">
+        <label>コース名を入力</label>
+        <input type="text" id="r-course-manual" placeholder="例: ○○カントリークラブ">
+      </div>
+      <label>コース（前半/後半）</label>
+      <select id="r-course-half">
+        <option value="">-- コースを選択後に選択 --</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="ctit">日時</div>
+      <label>プレー日</label>
+      <input type="date" id="r-date">
+      <label>スタート時間</label>
+      <input type="time" id="r-time" placeholder="例: 08:30">
+    </div>
+
+    <div class="card">
+      <div class="ctit">天気</div>
+      <div class="wx-grp" id="wx-grp">
+        <div class="wx-btn on" onclick="pickWx(this,'晴')"><span class="wx-icon">☀️</span><span class="wx-lbl">晴れ</span></div>
+        <div class="wx-btn" onclick="pickWx(this,'曇')"><span class="wx-icon">☁️</span><span class="wx-lbl">曇り</span></div>
+        <div class="wx-btn" onclick="pickWx(this,'雨')"><span class="wx-icon">🌧</span><span class="wx-lbl">雨</span></div>
+        <div class="wx-btn" onclick="pickWx(this,'雪')"><span class="wx-icon">❄️</span><span class="wx-lbl">雪</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctit">同伴プレーヤー（最大3人・任意）</div>
+      <div id="sel-players" style="margin-bottom:8px;min-height:28px"></div>
+      <div class="player-slot-warn" id="player-slot-warn"></div>
+      <div id="player-candidates" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="r-player-inp" placeholder="名前を追加" style="margin-bottom:0;flex:1" onkeydown="if(event.key==='Enter')addPlayer()">
+        <button class="btn btn-g btn-s" onclick="addPlayer()">追加</button>
+      </div>
+    </div>
+
+    <button class="btn btn-p" onclick="startRound()">ラウンド開始 →</button>
+  </div>
+</div>
+
+<div id="s-holes" class="screen">
+  <div class="hdr">
+    <button class="back-btn" onclick="back('s-home')">← 一覧</button>
+    <h1 id="holes-ttl">ホール一覧</h1>
+    <button class="hdr-btn" onclick="go('s-summary')">結果</button>
+  </div>
+  <div id="holes-summary" style="padding:10px 14px 0;flex-shrink:0"></div>
+  <div class="body-nb" style="padding:10px 14px;padding-bottom:max(24px,var(--safe-bot))">
+    <div id="holes-list" class="list-wrap"></div>
+  </div>
+</div>
+
+<div id="s-hole-start" class="screen">
+  <div class="hdr">
+    <button class="back-btn" onclick="back('s-holes')">← 戻る</button>
+    <h1 id="hs-ttl">1H 設定</h1>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="ctit">Par</div>
+      <div class="tgrp" id="sel-par">
+        <div class="tp" onclick="pick(this)">3</div>
+        <div class="tp on" onclick="pick(this)">4</div>
+        <div class="tp" onclick="pick(this)">5</div>
+      </div>
+      <label>距離（ヤード）</label>
+      <input type="number" id="h-dist" placeholder="例: 328">
+    </div>
+    <div class="card">
+      <div class="ctit">風向き</div>
+      <div class="wind-compass" id="wind-compass">
+        <div class="wbtn" onclick="pickW(this,'左奥')"><div class="warrow">↖</div><div style="font-size:11px">左奥</div></div>
+        <div class="wbtn" onclick="pickW(this,'アゲンスト')"><div class="warrow">↑</div><div style="font-size:11px">アゲ</div></div>
+        <div class="wbtn" onclick="pickW(this,'右奥')"><div class="warrow">↗</div><div style="font-size:11px">右奥</div></div>
+        <div class="wbtn" onclick="pickW(this,'左から')"><div class="warrow">←</div><div style="font-size:11px">左</div></div>
+        <div class="wbtn center on" onclick="pickW(this,'無風')"><div style="font-size:16px">○</div><div style="font-size:11px">無風</div></div>
+        <div class="wbtn" onclick="pickW(this,'右から')"><div class="warrow">→</div><div style="font-size:11px">右</div></div>
+        <div class="wbtn" onclick="pickW(this,'左前')"><div class="warrow">↙</div><div style="font-size:11px">左前</div></div>
+        <div class="wbtn" onclick="pickW(this,'フォロー')"><div class="warrow">↓</div><div style="font-size:11px">フォロー</div></div>
+        <div class="wbtn" onclick="pickW(this,'右前')"><div class="warrow">↘</div><div style="font-size:11px">右前</div></div>
+      </div>
+    </div>
+    <button class="btn btn-p" onclick="startHole()">ショット入力へ →</button>
+  </div>
+</div>
+
+<div id="s-shots" class="screen">
+  <div class="hdr">
+    <button class="back-btn" onclick="back('s-holes')">← 戻る</button>
+    <h1 id="shots-ttl">1H</h1>
+    <button class="hdr-btn" onclick="openAdd()">＋ 追加</button>
+  </div>
+  <div id="shots-info" style="padding:8px 14px;font-size:13px;color:var(--mt);background:var(--surf);border-bottom:.5px solid var(--bd);flex-shrink:0"></div>
+  <div class="prog-bar"><div class="prog-fill" id="hole-prog" style="width:0%"></div></div>
+  <div class="body-nb" style="padding:10px 14px;padding-bottom:max(24px,var(--safe-bot))">
+    <div id="shots-list" class="list-wrap" style="margin-bottom:12px"></div>
+  </div>
+  <div class="bot-bar">
+    <button class="btn btn-g" style="flex:1" onclick="openAdd()">＋ ショット追加</button>
+    <button class="btn btn-p" style="flex:1" onclick="go('s-result')">ホール終了 →</button>
+  </div>
+</div>
+
+<div id="s-add-shot" class="screen">
+  <div class="hdr">
+    <button class="back-btn" onclick="back('s-shots')">← 戻る</button>
+    <h1 id="add-ttl">ショット追加</h1>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="ctit">番手</div>
+      <div class="tgrp" id="sel-club"></div>
+    </div>
+    <div class="card">
+      <div class="ctit">打ち出し方向</div>
+      <div class="dir-ui">
+        <div class="dir-btn" id="dir-left" onclick="pickDir('左')">
+          <div class="dir-arrow">←</div>
+          <div>左</div>
+        </div>
+        <div class="dir-btn center-dir" id="dir-center" onclick="pickDir('真ん中')">
+          <div class="dir-arrow">↑</div>
+          <div>真ん中</div>
+        </div>
+        <div class="dir-btn" id="dir-right" onclick="pickDir('右')">
+          <div class="dir-arrow">→</div>
+          <div>右</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctit">ショット自己評価</div>
+      <div class="tgrp" id="sel-eval">
+        <div class="tp" onclick="pick(this)" style="background:#EAF3DE;border-color:#9FE1CB;color:#3B6D11">A 最高</div>
+        <div class="tp" onclick="pick(this)" style="background:#E6F1FB;border-color:#85B7EB;color:#0C447C">B 良い</div>
+        <div class="tp" onclick="pick(this)" style="background:#FAEEDA;border-color:#FAC775;color:#633806">C 普通</div>
+        <div class="tp" onclick="pick(this)" style="background:#FAECE7;border-color:#F5C4B3;color:#712B13">D ミス</div>
+        <div class="tp" onclick="pick(this)" style="background:#FCEBEB;border-color:#F7C1C1;color:#791F1F">E 大ミス</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctit">球筋</div>
+      <div class="tgrp" id="sel-shape">
+        <div class="tp" onclick="pick(this)">ストレート</div>
+        <div class="tp" onclick="pick(this)">ドロー</div>
+        <div class="tp" onclick="pick(this)">フェード</div>
+        <div class="tp" onclick="pick(this)">フック</div>
+        <div class="tp" onclick="pick(this)">スライス</div>
+        <div class="tp" onclick="pick(this)">低弾道</div>
+        <div class="tp" onclick="pick(this)">高弾道</div>
+      </div>
+      <div class="ctit">ミス内容</div>
+      <div class="tgrp" id="sel-miss">
+        <div class="tp" onclick="pick(this)">ナイス</div>
+        <div class="tp" onclick="pick(this)">クリーン</div>
+        <div class="tp" onclick="pick(this)">トップ</div>
+        <div class="tp" onclick="pick(this)">ダフリ</div>
+        <div class="tp" onclick="pick(this)">シャンク</div>
+        <div class="tp" onclick="pick(this)">テンプラ</div>
+        <div class="tp" onclick="pick(this)">ヒール</div>
+        <div class="tp" onclick="pick(this)">チーピン</div>
+        <div class="tp" onclick="pick(this)">プッシュ</div>
+        <div class="tp" onclick="pick(this)">プル</div>
+      </div>
+      <div class="ctit">着地場所</div>
+      <div class="tgrp" id="sel-land">
+        <div class="tp" onclick="pick(this)">FW</div>
+        <div class="tp" onclick="pick(this)">左ラフ</div>
+        <div class="tp" onclick="pick(this)">右ラフ</div>
+        <div class="tp" onclick="pick(this)">左林</div>
+        <div class="tp" onclick="pick(this)">右林</div>
+        <div class="tp" onclick="pick(this)">バンカー</div>
+        <div class="tp" onclick="pick(this)">グリーン</div>
+        <div class="tp" onclick="pick(this)">ショート</div>
+        <div class="tp" onclick="pick(this)">オーバー</div>
+        <div class="tp" onclick="pick(this)">OB</div>
+        <div class="tp" onclick="pick(this)">ペナルティ</div>
+      </div>
+    </div>
+    <div class="card">
+      <label>残りヤード（任意）</label>
+      <input type="number" id="s-remain" placeholder="例: 150">
+      <label>飛距離（任意）</label>
+      <input type="number" id="s-dist" placeholder="例: 230">
+      <label>ライ（任意）</label>
+      <div class="tgrp" id="sel-lie">
+        <div class="tp" onclick="pick(this)">フラット</div>
+        <div class="tp" onclick="pick(this)">左足下がり</div>
+        <div class="tp" onclick="pick(this)">左足上がり</div>
+        <div class="tp" onclick="pick(this)">つま先上がり</div>
+        <div class="tp" onclick="pick(this)">つま先下がり</div>
+      </div>
+      <label>メモ（任意）</label>
+      <input type="text" id="s-memo" placeholder="自由入力">
+    </div>
+    <button class="btn btn-p" onclick="saveShot()">保存して次のショットへ</button>
+  </div>
+</div>
+
+<div id="s-result" class="screen">
+  <div class="hdr">
+    <button class="back-btn" onclick="back('s-shots')">← 戻る</button>
+    <h1 id="result-ttl">1H 結果入力</h1>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="ctit">オン数</div>
+      <div class="tgrp" id="sel-on">
+        <div class="tp" onclick="pick(this)">1</div>
+        <div class="tp" onclick="pick(this)">2</div>
+        <div class="tp" onclick="pick(this)">3</div>
+        <div class="tp" onclick="pick(this)">4</div>
+        <div class="tp" onclick="pick(this)">5</div>
+      </div>
+      <div class="ctit">パット数</div>
+      <div class="tgrp" id="sel-putt">
+        <div class="tp" onclick="pick(this)">0</div>
+        <div class="tp" onclick="pick(this)">1</div>
+        <div class="tp" onclick="pick(this)">2</div>
+        <div class="tp" onclick="pick(this)">3</div>
+        <div class="tp" onclick="pick(this)">4</div>
+      </div>
+      <label>スコア（手入力・確認）</label>
+      <input type="number" id="h-score" placeholder="例: 5" oninput="chkScore()">
+      <div id="score-warn" class="warn" style="display:none">⚠ ショット数(<span id="auto-sc"></span>打)と異なります</div>
+    </div>
+    <div class="card">
+      <div class="ctit">パット詳細（任意）</div>
+      <label>1パット目 距離（歩）</label>
+      <input type="number" id="p1d" placeholder="例: 8">
+      <label>1パット目 結果</label>
+      <div class="tgrp" id="sel-p1">
+        <div class="tp" onclick="pick(this)">IN</div>
+        <div class="tp" onclick="pick(this)">ショート</div>
+        <div class="tp" onclick="pick(this)">オーバー</div>
+        <div class="tp" onclick="pick(this)">ミス</div>
+      </div>
+      <label>原因メモ（任意）</label>
+      <input type="text" id="p1m" placeholder="例: ラインを読めなかった">
+    </div>
+    <button class="btn btn-p" onclick="saveResult()">このホールを保存</button>
+  </div>
+</div>
+
+<div id="s-summary" class="screen">
+  <div class="hdr">
+    <button class="back-btn" onclick="back('s-holes')">← 戻る</button>
+    <h1>ラウンド結果</h1>
+  </div>
+  <div class="tabs">
+    <div class="tab on" onclick="showTab('t-score',this)">スコア</div>
+    <div class="tab" onclick="showTab('t-detail',this)">詳細</div>
+    <div class="tab" onclick="showTab('t-analysis',this)">分析</div>
+    <div class="tab" onclick="showTab('t-copy',this)">コピー</div>
+  </div>
+  <div class="body">
+    <div id="t-score"></div>
+    <div id="t-detail" style="display:none"></div>
+    <div id="t-analysis" style="display:none"></div>
+    <div id="t-copy" style="display:none"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ========== 福岡県ゴルフ場データ ==========
+// 手元に実測データがあるのは伊都・ザ・クラシック等のみ。他はPar情報のみで距離は仮値（後で編集可能）
+const FUKUOKA = [
+  // 1. 秋月カントリークラブ
+  { id:"akizuki_cc", name:"秋月カントリークラブ", area:"朝倉市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:363},{num:2,par:3,dist:133},{num:3,par:4,dist:350},
+        {num:4,par:4,dist:270},{num:5,par:5,dist:463},{num:6,par:4,dist:341},
+        {num:7,par:5,dist:489},{num:8,par:3,dist:141},{num:9,par:4,dist:354}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:336},{num:11,par:3,dist:130},{num:12,par:4,dist:372},
+        {num:13,par:4,dist:280},{num:14,par:5,dist:505},{num:15,par:4,dist:319},
+        {num:16,par:5,dist:509},{num:17,par:3,dist:119},{num:18,par:4,dist:328}]}
+    ]},
+  // 2. 茜ゴルフクラブ
+  { id:"akane_gc", name:"茜ゴルフクラブ", area:"飯塚市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:5,dist:540},{num:2,par:4,dist:365},{num:3,par:4,dist:340},
+        {num:4,par:4,dist:335},{num:5,par:3,dist:125},{num:6,par:4,dist:375},
+        {num:7,par:3,dist:150},{num:8,par:4,dist:395},{num:9,par:5,dist:505}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:550},{num:11,par:4,dist:340},{num:12,par:3,dist:140},
+        {num:13,par:4,dist:385},{num:14,par:4,dist:370},{num:15,par:3,dist:140},
+        {num:16,par:5,dist:500},{num:17,par:4,dist:305},{num:18,par:4,dist:365}]}
+    ]},
+  // 3. 麻生飯塚ゴルフ倶楽部（27H）
+  { id:"aso_iizuka", name:"麻生飯塚ゴルフ倶楽部", area:"嘉穂郡桂川町",
+    courses:[
+      { name:"ブルー", holes:[
+        {num:1,par:4,dist:364},{num:2,par:3,dist:162},{num:3,par:5,dist:528},
+        {num:4,par:4,dist:336},{num:5,par:3,dist:168},{num:6,par:4,dist:312},
+        {num:7,par:4,dist:417},{num:8,par:5,dist:548},{num:9,par:4,dist:407}]},
+      { name:"グリーン", holes:[
+        {num:1,par:5,dist:488},{num:2,par:4,dist:386},{num:3,par:5,dist:489},
+        {num:4,par:4,dist:336},{num:5,par:3,dist:186},{num:6,par:4,dist:412},
+        {num:7,par:4,dist:370},{num:8,par:3,dist:162},{num:9,par:4,dist:371}]},
+      { name:"ホワイト", holes:[
+        {num:1,par:5,dist:483},{num:2,par:3,dist:149},{num:3,par:4,dist:377},
+        {num:4,par:4,dist:394},{num:5,par:4,dist:342},{num:6,par:4,dist:376},
+        {num:7,par:3,dist:187},{num:8,par:5,dist:525},{num:9,par:4,dist:372}]}
+    ]},
+  // 4. 有明カントリークラブ
+  { id:"ariake_cc", name:"有明カントリークラブ", area:"大牟田市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:5,dist:562},{num:2,par:3,dist:133},{num:3,par:4,dist:286},
+        {num:4,par:4,dist:361},{num:5,par:3,dist:206},{num:6,par:4,dist:378},
+        {num:7,par:4,dist:409},{num:8,par:5,dist:469},{num:9,par:4,dist:373}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:377},{num:11,par:4,dist:312},{num:12,par:3,dist:165},
+        {num:13,par:5,dist:577},{num:14,par:4,dist:318},{num:15,par:4,dist:419},
+        {num:16,par:5,dist:463},{num:17,par:3,dist:163},{num:18,par:4,dist:348}]}
+    ]},
+  // 5. 皐月ゴルフ倶楽部 天拝コース
+  { id:"satsuki_tenpai", name:"皐月ゴルフ倶楽部 天拝コース", area:"筑紫野市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:5,dist:512},{num:2,par:4,dist:316},{num:3,par:3,dist:127},
+        {num:4,par:4,dist:386},{num:5,par:4,dist:326},{num:6,par:5,dist:499},
+        {num:7,par:4,dist:368},{num:8,par:3,dist:151},{num:9,par:4,dist:387}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:380},{num:11,par:5,dist:505},{num:12,par:3,dist:145},
+        {num:13,par:5,dist:532},{num:14,par:4,dist:358},{num:15,par:4,dist:341},
+        {num:16,par:4,dist:375},{num:17,par:3,dist:127},{num:18,par:4,dist:389}]}
+    ]},
+  // 6. 皐月ゴルフ倶楽部 竜王コース（Par71）
+  { id:"satsuki_ryuo", name:"皐月ゴルフ倶楽部 竜王コース", area:"飯塚市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:329},{num:2,par:4,dist:368},{num:3,par:3,dist:135},
+        {num:4,par:4,dist:304},{num:5,par:4,dist:256},{num:6,par:4,dist:282},
+        {num:7,par:4,dist:315},{num:8,par:5,dist:503},{num:9,par:3,dist:124}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:418},{num:11,par:3,dist:127},{num:12,par:4,dist:307},
+        {num:13,par:4,dist:301},{num:14,par:5,dist:447},{num:15,par:3,dist:117},
+        {num:16,par:4,dist:282},{num:17,par:4,dist:349},{num:18,par:5,dist:505}]}
+    ]},
+  // 7. 伊都ゴルフ倶楽部【最優先・高精度】
+  { id:"ito", name:"伊都ゴルフ倶楽部", area:"糸島市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:374},{num:2,par:4,dist:381},{num:3,par:5,dist:499},
+        {num:4,par:3,dist:145},{num:5,par:4,dist:372},{num:6,par:4,dist:429},
+        {num:7,par:5,dist:538},{num:8,par:3,dist:176},{num:9,par:4,dist:342}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:478},{num:11,par:4,dist:396},{num:12,par:4,dist:326},
+        {num:13,par:3,dist:147},{num:14,par:4,dist:347},{num:15,par:4,dist:407},
+        {num:16,par:5,dist:549},{num:17,par:3,dist:163},{num:18,par:4,dist:347}]}
+    ]},
+  // 8. 浮羽カントリークラブ
+  { id:"ukiha_cc", name:"浮羽カントリークラブ", area:"うきは市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:367},{num:2,par:3,dist:174},{num:3,par:5,dist:529},
+        {num:4,par:4,dist:396},{num:5,par:3,dist:133},{num:6,par:4,dist:318},
+        {num:7,par:4,dist:384},{num:8,par:4,dist:383},{num:9,par:5,dist:496}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:384},{num:11,par:4,dist:325},{num:12,par:4,dist:375},
+        {num:13,par:3,dist:113},{num:14,par:4,dist:363},{num:15,par:5,dist:491},
+        {num:16,par:4,dist:381},{num:17,par:3,dist:124},{num:18,par:5,dist:512}]}
+    ]},
+  // 9. 小郡カンツリー倶楽部（27H）
+  { id:"ogori_ccc", name:"小郡カンツリー倶楽部", area:"小郡市",
+    courses:[
+      { name:"西", holes:[
+        {num:1,par:4,dist:380},{num:2,par:4,dist:350},{num:3,par:3,dist:160},
+        {num:4,par:4,dist:325},{num:5,par:3,dist:155},{num:6,par:4,dist:430},
+        {num:7,par:5,dist:510},{num:8,par:4,dist:385},{num:9,par:5,dist:515}]},
+      { name:"東", holes:[
+        {num:1,par:5,dist:490},{num:2,par:3,dist:190},{num:3,par:4,dist:330},
+        {num:4,par:4,dist:390},{num:5,par:4,dist:375},{num:6,par:4,dist:410},
+        {num:7,par:5,dist:555},{num:8,par:4,dist:300},{num:9,par:3,dist:160}]},
+      { name:"南", holes:[
+        {num:1,par:4,dist:400},{num:2,par:3,dist:150},{num:3,par:4,dist:355},
+        {num:4,par:4,dist:420},{num:5,par:3,dist:165},{num:6,par:5,dist:495},
+        {num:7,par:5,dist:480},{num:8,par:4,dist:410},{num:9,par:4,dist:380}]}
+    ]},
+  // 10. 勝山御所カントリークラブ
+  { id:"katsuyama_gosho", name:"勝山御所カントリークラブ", area:"京都郡みやこ町",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:5,dist:519},{num:2,par:4,dist:363},{num:3,par:4,dist:354},
+        {num:4,par:3,dist:177},{num:5,par:4,dist:317},{num:6,par:4,dist:381},
+        {num:7,par:3,dist:147},{num:8,par:5,dist:485},{num:9,par:4,dist:397}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:362},{num:11,par:4,dist:315},{num:12,par:3,dist:159},
+        {num:13,par:4,dist:327},{num:14,par:4,dist:372},{num:15,par:5,dist:387},
+        {num:16,par:5,dist:514},{num:17,par:4,dist:392},{num:18,par:3,dist:174}]}
+    ]},
+  // 11. 北九州カントリー倶楽部（27H）
+  { id:"kitakyushu_cc", name:"北九州カントリー倶楽部", area:"飯塚市",
+    courses:[
+      { name:"松", holes:[
+        {num:1,par:5,dist:457},{num:2,par:3,dist:180},{num:3,par:4,dist:363},
+        {num:4,par:5,dist:511},{num:5,par:4,dist:366},{num:6,par:4,dist:350},
+        {num:7,par:4,dist:397},{num:8,par:3,dist:156},{num:9,par:4,dist:402}]},
+      { name:"竹", holes:[
+        {num:1,par:4,dist:356},{num:2,par:4,dist:424},{num:3,par:4,dist:405},
+        {num:4,par:3,dist:186},{num:5,par:4,dist:361},{num:6,par:5,dist:479},
+        {num:7,par:3,dist:165},{num:8,par:4,dist:367},{num:9,par:5,dist:561}]},
+      { name:"梅", holes:[
+        {num:1,par:4,dist:396},{num:2,par:5,dist:446},{num:3,par:3,dist:176},
+        {num:4,par:4,dist:292},{num:5,par:4,dist:315},{num:6,par:5,dist:456},
+        {num:7,par:3,dist:115},{num:8,par:4,dist:283},{num:9,par:4,dist:352}]}
+    ]},
+  // 12. 九州ゴルフ倶楽部 八幡コース
+  { id:"kyushu_yahata", name:"九州ゴルフ倶楽部 八幡コース", area:"北九州市八幡東区",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:332},{num:2,par:4,dist:430},{num:3,par:5,dist:539},
+        {num:4,par:4,dist:403},{num:5,par:4,dist:403},{num:6,par:5,dist:529},
+        {num:7,par:3,dist:208},{num:8,par:4,dist:332},{num:9,par:3,dist:170}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:518},{num:11,par:3,dist:183},{num:12,par:4,dist:380},
+        {num:13,par:4,dist:322},{num:14,par:5,dist:543},{num:15,par:4,dist:377},
+        {num:16,par:3,dist:182},{num:17,par:4,dist:408},{num:18,par:4,dist:339}]}
+    ]},
+  // 13. ムーンレイクゴルフクラブ 鞍手コース（27H）
+  { id:"moonlake_kurate", name:"ムーンレイクゴルフクラブ 鞍手コース", area:"鞍手郡鞍手町",
+    courses:[
+      { name:"東", holes:[
+        {num:1,par:4,dist:386},{num:2,par:5,dist:551},{num:3,par:4,dist:416},
+        {num:4,par:3,dist:156},{num:5,par:4,dist:403},{num:6,par:4,dist:333},
+        {num:7,par:3,dist:172},{num:8,par:5,dist:502},{num:9,par:4,dist:379}]},
+      { name:"中", holes:[
+        {num:1,par:4,dist:384},{num:2,par:5,dist:502},{num:3,par:4,dist:331},
+        {num:4,par:3,dist:168},{num:5,par:4,dist:420},{num:6,par:5,dist:495},
+        {num:7,par:4,dist:401},{num:8,par:3,dist:166},{num:9,par:4,dist:397}]},
+      { name:"西", holes:[
+        {num:1,par:4,dist:381},{num:2,par:5,dist:498},{num:3,par:4,dist:344},
+        {num:4,par:3,dist:157},{num:5,par:4,dist:433},{num:6,par:4,dist:336},
+        {num:7,par:4,dist:320},{num:8,par:3,dist:186},{num:9,par:5,dist:500}]}
+    ]},
+  // 14. 久留米カントリークラブ
+  { id:"kurume_cc", name:"久留米カントリークラブ", area:"八女郡広川町",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:339},{num:2,par:4,dist:316},{num:3,par:4,dist:279},
+        {num:4,par:4,dist:339},{num:5,par:5,dist:458},{num:6,par:3,dist:155},
+        {num:7,par:5,dist:485},{num:8,par:3,dist:113},{num:9,par:4,dist:294}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:390},{num:11,par:3,dist:162},{num:12,par:4,dist:296},
+        {num:13,par:4,dist:338},{num:14,par:4,dist:340},{num:15,par:5,dist:504},
+        {num:16,par:4,dist:332},{num:17,par:3,dist:126},{num:18,par:5,dist:491}]}
+    ]},
+  // 15. 芥屋ゴルフ倶楽部
+  { id:"keya", name:"芥屋ゴルフ倶楽部", area:"糸島市",
+    courses:[
+      { name:"OUT（大門）", holes:[
+        {num:1,par:4,dist:383},{num:2,par:4,dist:373},{num:3,par:3,dist:140},
+        {num:4,par:5,dist:493},{num:5,par:4,dist:323},{num:6,par:4,dist:377},
+        {num:7,par:4,dist:432},{num:8,par:3,dist:140},{num:9,par:5,dist:503}]},
+      { name:"IN（小富士）", holes:[
+        {num:10,par:4,dist:377},{num:11,par:4,dist:415},{num:12,par:3,dist:179},
+        {num:13,par:4,dist:411},{num:14,par:4,dist:319},{num:15,par:5,dist:470},
+        {num:16,par:4,dist:328},{num:17,par:3,dist:134},{num:18,par:5,dist:481}]}
+    ]},
+  // 16. 玄海ゴルフクラブ
+  { id:"genkai_gc", name:"玄海ゴルフクラブ", area:"宗像市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:5,dist:465},{num:2,par:4,dist:389},{num:3,par:3,dist:161},
+        {num:4,par:4,dist:360},{num:5,par:5,dist:499},{num:6,par:4,dist:371},
+        {num:7,par:3,dist:162},{num:8,par:4,dist:335},{num:9,par:4,dist:376}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:470},{num:11,par:4,dist:338},{num:12,par:4,dist:391},
+        {num:13,par:3,dist:177},{num:14,par:4,dist:348},{num:15,par:3,dist:170},
+        {num:16,par:4,dist:359},{num:17,par:4,dist:375},{num:18,par:5,dist:487}]}
+    ]},
+  // 17. かほゴルフクラブ
+  { id:"kaho_gc", name:"かほゴルフクラブ", area:"飯塚市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:5,dist:490},{num:2,par:4,dist:319},{num:3,par:3,dist:139},
+        {num:4,par:5,dist:450},{num:5,par:4,dist:338},{num:6,par:3,dist:159},
+        {num:7,par:4,dist:353},{num:8,par:4,dist:331},{num:9,par:4,dist:336}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:440},{num:11,par:4,dist:386},{num:12,par:4,dist:404},
+        {num:13,par:3,dist:151},{num:14,par:5,dist:452},{num:15,par:3,dist:156},
+        {num:16,par:4,dist:330},{num:17,par:4,dist:337},{num:18,par:4,dist:384}]}
+    ]},
+  // 18. 古賀ゴルフ・クラブ
+  { id:"koga_gc", name:"古賀ゴルフ・クラブ", area:"古賀市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:365},{num:2,par:4,dist:339},{num:3,par:4,dist:297},
+        {num:4,par:3,dist:169},{num:5,par:5,dist:448},{num:6,par:4,dist:357},
+        {num:7,par:5,dist:486},{num:8,par:3,dist:194},{num:9,par:4,dist:364}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:387},{num:11,par:3,dist:164},{num:12,par:5,dist:477},
+        {num:13,par:4,dist:363},{num:14,par:5,dist:495},{num:15,par:3,dist:140},
+        {num:16,par:4,dist:337},{num:17,par:4,dist:370},{num:18,par:4,dist:313}]}
+    ]},
+  // 19. 小倉カンツリー倶楽部（Par71）
+  { id:"kokura_ccc", name:"小倉カンツリー倶楽部", area:"北九州市小倉南区",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:357},{num:2,par:3,dist:157},{num:3,par:5,dist:465},
+        {num:4,par:4,dist:357},{num:5,par:4,dist:364},{num:6,par:4,dist:408},
+        {num:7,par:5,dist:462},{num:8,par:5,dist:505},{num:9,par:3,dist:152}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:338},{num:11,par:4,dist:416},{num:12,par:4,dist:302},
+        {num:13,par:5,dist:471},{num:14,par:3,dist:140},{num:15,par:4,dist:352},
+        {num:16,par:3,dist:189},{num:17,par:4,dist:363},{num:18,par:4,dist:398}]}
+    ]},
+  // 20. 西戸崎シーサイドカントリークラブ
+  { id:"saitozaki", name:"西戸崎シーサイドカントリークラブ", area:"福岡市東区",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:388},{num:2,par:3,dist:184},{num:3,par:4,dist:378},
+        {num:4,par:4,dist:319},{num:5,par:4,dist:291},{num:6,par:3,dist:113},
+        {num:7,par:5,dist:479},{num:8,par:4,dist:372},{num:9,par:5,dist:483}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:346},{num:11,par:4,dist:306},{num:12,par:3,dist:113},
+        {num:13,par:4,dist:395},{num:14,par:3,dist:172},{num:15,par:4,dist:359},
+        {num:16,par:5,dist:463},{num:17,par:4,dist:434},{num:18,par:5,dist:508}]}
+    ]},
+  // 21. ザ・クイーンズヒルゴルフクラブ
+  { id:"queenshill", name:"ザ・クイーンズヒルゴルフクラブ", area:"糸島市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:357},{num:2,par:4,dist:303},{num:3,par:4,dist:385},
+        {num:4,par:3,dist:153},{num:5,par:4,dist:325},{num:6,par:5,dist:553},
+        {num:7,par:4,dist:367},{num:8,par:3,dist:143},{num:9,par:5,dist:491}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:478},{num:11,par:4,dist:395},{num:12,par:3,dist:148},
+        {num:13,par:4,dist:380},{num:14,par:4,dist:403},{num:15,par:4,dist:370},
+        {num:16,par:3,dist:160},{num:17,par:5,dist:471},{num:18,par:4,dist:366}]}
+    ]},
+  // 22. ザ・クラシックゴルフ倶楽部（27H）
+  { id:"classic_gc", name:"ザ・クラシックゴルフ倶楽部", area:"宮若市",
+    courses:[
+      { name:"キング", holes:[
+        {num:1,par:5,dist:445},{num:2,par:4,dist:301},{num:3,par:3,dist:155},
+        {num:4,par:4,dist:403},{num:5,par:4,dist:435},{num:6,par:4,dist:381},
+        {num:7,par:3,dist:188},{num:8,par:5,dist:538},{num:9,par:4,dist:387}]},
+      { name:"クイーン", holes:[
+        {num:1,par:4,dist:350},{num:2,par:4,dist:361},{num:3,par:5,dist:492},
+        {num:4,par:3,dist:170},{num:5,par:4,dist:383},{num:6,par:5,dist:547},
+        {num:7,par:4,dist:328},{num:8,par:3,dist:153},{num:9,par:4,dist:400}]},
+      { name:"プリンス", holes:[
+        {num:1,par:4,dist:328},{num:2,par:5,dist:520},{num:3,par:4,dist:388},
+        {num:4,par:4,dist:356},{num:5,par:3,dist:159},{num:6,par:5,dist:536},
+        {num:7,par:4,dist:405},{num:8,par:4,dist:361},{num:9,par:3,dist:164}]}
+    ]},
+  // 23. JR内野カントリークラブ
+  { id:"jr_uchino", name:"JR内野カントリークラブ", area:"飯塚市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:332},{num:2,par:4,dist:347},{num:3,par:5,dist:487},
+        {num:4,par:3,dist:156},{num:5,par:4,dist:350},{num:6,par:4,dist:336},
+        {num:7,par:4,dist:373},{num:8,par:3,dist:150},{num:9,par:5,dist:491}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:385},{num:11,par:3,dist:158},{num:12,par:4,dist:374},
+        {num:13,par:4,dist:318},{num:14,par:4,dist:328},{num:15,par:5,dist:471},
+        {num:16,par:3,dist:136},{num:17,par:4,dist:341},{num:18,par:5,dist:517}]}
+    ]},
+  // 24. 志摩シーサイドカンツリークラブ
+  { id:"shima_seaside", name:"志摩シーサイドカンツリークラブ", area:"糸島市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:351},{num:2,par:3,dist:180},{num:3,par:5,dist:479},
+        {num:4,par:4,dist:397},{num:5,par:4,dist:413},{num:6,par:4,dist:370},
+        {num:7,par:5,dist:478},{num:8,par:3,dist:182},{num:9,par:4,dist:285}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:349},{num:11,par:3,dist:172},{num:12,par:4,dist:344},
+        {num:13,par:4,dist:386},{num:14,par:5,dist:466},{num:15,par:4,dist:325},
+        {num:16,par:5,dist:532},{num:17,par:3,dist:148},{num:18,par:4,dist:388}]}
+    ]},
+  // 25. 周防灘カントリークラブ
+  { id:"suounada", name:"周防灘カントリークラブ", area:"築上郡築上町",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:345},{num:2,par:4,dist:330},{num:3,par:5,dist:479},
+        {num:4,par:4,dist:421},{num:5,par:3,dist:166},{num:6,par:4,dist:347},
+        {num:7,par:5,dist:526},{num:8,par:3,dist:167},{num:9,par:4,dist:364}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:451},{num:11,par:3,dist:168},{num:12,par:4,dist:367},
+        {num:13,par:4,dist:347},{num:14,par:4,dist:327},{num:15,par:5,dist:478},
+        {num:16,par:4,dist:339},{num:17,par:3,dist:143},{num:18,par:4,dist:366}]}
+    ]},
+  // 26. 瀬板の森北九州ゴルフコース
+  { id:"sehita_mori", name:"瀬板の森北九州ゴルフコース", area:"北九州市八幡西区",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:380},{num:2,par:4,dist:337},{num:3,par:4,dist:344},
+        {num:4,par:5,dist:495},{num:5,par:4,dist:378},{num:6,par:3,dist:167},
+        {num:7,par:4,dist:345},{num:8,par:3,dist:180},{num:9,par:5,dist:477}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:494},{num:11,par:3,dist:85},{num:12,par:4,dist:308},
+        {num:13,par:4,dist:324},{num:14,par:5,dist:472},{num:15,par:4,dist:310},
+        {num:16,par:4,dist:387},{num:17,par:3,dist:138},{num:18,par:4,dist:372}]}
+    ]},
+  // 27. セブンミリオンカントリークラブ
+  { id:"seven_million", name:"セブンミリオンカントリークラブ", area:"福岡市早良区",
+    courses:[
+      { name:"背振（OUT）", holes:[
+        {num:1,par:5,dist:460},{num:2,par:4,dist:388},{num:3,par:3,dist:133},
+        {num:4,par:4,dist:323},{num:5,par:5,dist:473},{num:6,par:4,dist:333},
+        {num:7,par:4,dist:370},{num:8,par:3,dist:150},{num:9,par:4,dist:369}]},
+      { name:"那珂（IN）", holes:[
+        {num:10,par:4,dist:364},{num:11,par:4,dist:347},{num:12,par:5,dist:509},
+        {num:13,par:3,dist:180},{num:14,par:4,dist:295},{num:15,par:4,dist:371},
+        {num:16,par:4,dist:359},{num:17,par:3,dist:187},{num:18,par:5,dist:499}]}
+    ]},
+  // 28. セントラル福岡ゴルフ倶楽部
+  { id:"central_fukuoka", name:"セントラル福岡ゴルフ倶楽部", area:"筑紫野市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:5,dist:480},{num:2,par:3,dist:119},{num:3,par:4,dist:355},
+        {num:4,par:4,dist:300},{num:5,par:5,dist:513},{num:6,par:3,dist:132},
+        {num:7,par:4,dist:361},{num:8,par:4,dist:356},{num:9,par:4,dist:340}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:461},{num:11,par:3,dist:199},{num:12,par:4,dist:365},
+        {num:13,par:4,dist:298},{num:14,par:4,dist:285},{num:15,par:4,dist:384},
+        {num:16,par:3,dist:153},{num:17,par:5,dist:460},{num:18,par:4,dist:365}]}
+    ]},
+  // 29. 大博多カントリー倶楽部（27H）
+  { id:"daihakata", name:"大博多カントリー倶楽部", area:"那珂川市",
+    courses:[
+      { name:"桧", holes:[
+        {num:1,par:4,dist:378},{num:2,par:3,dist:167},{num:3,par:4,dist:367},
+        {num:4,par:4,dist:305},{num:5,par:5,dist:591},{num:6,par:4,dist:400},
+        {num:7,par:3,dist:160},{num:8,par:4,dist:311},{num:9,par:5,dist:534}]},
+      { name:"松", holes:[
+        {num:1,par:4,dist:386},{num:2,par:5,dist:512},{num:3,par:4,dist:330},
+        {num:4,par:3,dist:179},{num:5,par:4,dist:349},{num:6,par:5,dist:481},
+        {num:7,par:4,dist:382},{num:8,par:4,dist:374},{num:9,par:3,dist:164}]},
+      { name:"杉", holes:[
+        {num:1,par:5,dist:480},{num:2,par:4,dist:318},{num:3,par:4,dist:366},
+        {num:4,par:3,dist:113},{num:5,par:4,dist:340},{num:6,par:4,dist:322},
+        {num:7,par:5,dist:466},{num:8,par:3,dist:162},{num:9,par:4,dist:273}]}
+    ]},
+  // 30. 鷹羽ロイヤルカントリークラブ
+  { id:"takaha_royal", name:"鷹羽ロイヤルカントリークラブ", area:"田川郡大任町",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:318},{num:2,par:4,dist:364},{num:3,par:4,dist:350},
+        {num:4,par:4,dist:332},{num:5,par:5,dist:493},{num:6,par:3,dist:133},
+        {num:7,par:4,dist:298},{num:8,par:3,dist:118},{num:9,par:5,dist:548}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:340},{num:11,par:4,dist:300},{num:12,par:4,dist:380},
+        {num:13,par:4,dist:354},{num:14,par:3,dist:148},{num:15,par:5,dist:453},
+        {num:16,par:4,dist:297},{num:17,par:3,dist:128},{num:18,par:5,dist:453}]}
+    ]},
+  // 31. 太宰府ゴルフ倶楽部
+  { id:"dazaifu_gc", name:"太宰府ゴルフ倶楽部", area:"太宰府市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:381},{num:2,par:5,dist:498},{num:3,par:4,dist:365},
+        {num:4,par:3,dist:159},{num:5,par:4,dist:402},{num:6,par:5,dist:503},
+        {num:7,par:4,dist:415},{num:8,par:3,dist:165},{num:9,par:4,dist:382}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:365},{num:11,par:3,dist:173},{num:12,par:4,dist:440},
+        {num:13,par:5,dist:488},{num:14,par:4,dist:400},{num:15,par:3,dist:170},
+        {num:16,par:4,dist:367},{num:17,par:4,dist:364},{num:18,par:5,dist:500}]}
+    ]},
+  // 32. チェリーゴルフクラブ小倉南コース
+  { id:"cherry_kokuraminami", name:"チェリーゴルフクラブ小倉南コース", area:"京都郡みやこ町",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:354},{num:2,par:3,dist:159},{num:3,par:5,dist:505},
+        {num:4,par:4,dist:373},{num:5,par:5,dist:507},{num:6,par:4,dist:390},
+        {num:7,par:4,dist:410},{num:8,par:4,dist:342},{num:9,par:3,dist:139}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:326},{num:11,par:3,dist:171},{num:12,par:4,dist:388},
+        {num:13,par:5,dist:512},{num:14,par:4,dist:259},{num:15,par:5,dist:489},
+        {num:16,par:3,dist:148},{num:17,par:4,dist:413},{num:18,par:4,dist:398}]}
+    ]},
+  // 33. 筑紫ヶ丘ゴルフクラブ（27H）
+  { id:"chikushigaoka", name:"筑紫ヶ丘ゴルフクラブ", area:"那珂川市",
+    courses:[
+      { name:"北", holes:[
+        {num:1,par:4,dist:354},{num:2,par:3,dist:156},{num:3,par:4,dist:349},
+        {num:4,par:3,dist:180},{num:5,par:4,dist:400},{num:6,par:5,dist:578},
+        {num:7,par:4,dist:371},{num:8,par:4,dist:374},{num:9,par:5,dist:521}]},
+      { name:"西", holes:[
+        {num:1,par:5,dist:494},{num:2,par:4,dist:353},{num:3,par:4,dist:328},
+        {num:4,par:4,dist:367},{num:5,par:4,dist:336},{num:6,par:3,dist:165},
+        {num:7,par:4,dist:375},{num:8,par:3,dist:180},{num:9,par:5,dist:580}]},
+      { name:"南", holes:[
+        {num:1,par:4,dist:380},{num:2,par:4,dist:342},{num:3,par:3,dist:168},
+        {num:4,par:4,dist:396},{num:5,par:5,dist:516},{num:6,par:3,dist:178},
+        {num:7,par:5,dist:568},{num:8,par:4,dist:391},{num:9,par:4,dist:420}]}
+    ]},
+  // 34. 筑紫野カントリークラブ
+  { id:"chikushino", name:"筑紫野カントリークラブ", area:"筑紫野市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:5,dist:503},{num:2,par:4,dist:375},{num:3,par:3,dist:192},
+        {num:4,par:4,dist:348},{num:5,par:4,dist:373},{num:6,par:4,dist:379},
+        {num:7,par:3,dist:145},{num:8,par:4,dist:384},{num:9,par:5,dist:467}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:372},{num:11,par:4,dist:386},{num:12,par:3,dist:170},
+        {num:13,par:5,dist:547},{num:14,par:4,dist:400},{num:15,par:5,dist:518},
+        {num:16,par:3,dist:165},{num:17,par:4,dist:345},{num:18,par:4,dist:346}]}
+    ]},
+  // 35. チサンカントリークラブ遠賀（27H・遠賀コースは推定）
+  { id:"chisan_onga", name:"チサンカントリークラブ遠賀", area:"遠賀郡遠賀町",
+    courses:[
+      { name:"筑紫", holes:[
+        {num:1,par:4,dist:310},{num:2,par:5,dist:481},{num:3,par:3,dist:169},
+        {num:4,par:4,dist:308},{num:5,par:5,dist:488},{num:6,par:3,dist:102},
+        {num:7,par:4,dist:305},{num:8,par:4,dist:294},{num:9,par:4,dist:378}]},
+      { name:"玄海", holes:[
+        {num:1,par:5,dist:491},{num:2,par:3,dist:189},{num:3,par:4,dist:340},
+        {num:4,par:5,dist:465},{num:5,par:3,dist:165},{num:6,par:4,dist:382},
+        {num:7,par:4,dist:399},{num:8,par:4,dist:340},{num:9,par:4,dist:334}]},
+      { name:"遠賀", holes:[
+        {num:1,par:4,dist:350},{num:2,par:4,dist:340},{num:3,par:3,dist:150},
+        {num:4,par:5,dist:480},{num:5,par:4,dist:365},{num:6,par:4,dist:335},
+        {num:7,par:3,dist:160},{num:8,par:4,dist:340},{num:9,par:5,dist:295}]}
+    ]},
+  // 36. 西日本カントリークラブ（INは推定）
+  { id:"nishinihon_cc", name:"西日本カントリークラブ", area:"直方市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:400},{num:2,par:3,dist:185},{num:3,par:5,dist:501},
+        {num:4,par:4,dist:442},{num:5,par:4,dist:362},{num:6,par:4,dist:390},
+        {num:7,par:4,dist:436},{num:8,par:3,dist:169},{num:9,par:5,dist:522}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:390},{num:11,par:5,dist:520},{num:12,par:4,dist:395},
+        {num:13,par:3,dist:175},{num:14,par:4,dist:385},{num:15,par:4,dist:400},
+        {num:16,par:5,dist:510},{num:17,par:4,dist:375},{num:18,par:3,dist:188}]}
+    ]},
+  // 37. 二丈カントリークラブ
+  { id:"nijo", name:"二丈カントリークラブ", area:"糸島市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:337},{num:2,par:5,dist:552},{num:3,par:3,dist:148},
+        {num:4,par:4,dist:376},{num:5,par:4,dist:303},{num:6,par:3,dist:152},
+        {num:7,par:5,dist:437},{num:8,par:4,dist:297},{num:9,par:4,dist:333}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:360},{num:11,par:3,dist:155},{num:12,par:5,dist:459},
+        {num:13,par:4,dist:430},{num:14,par:5,dist:459},{num:15,par:4,dist:360},
+        {num:16,par:3,dist:150},{num:17,par:4,dist:343},{num:18,par:4,dist:337}]}
+    ]},
+  // 38. 久山カントリー倶楽部（Par70）
+  { id:"hisayama_cc", name:"久山カントリー倶楽部", area:"糟屋郡久山町",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:425},{num:2,par:4,dist:370},{num:3,par:4,dist:341},
+        {num:4,par:4,dist:260},{num:5,par:3,dist:120},{num:6,par:4,dist:330},
+        {num:7,par:4,dist:295},{num:8,par:3,dist:143},{num:9,par:4,dist:410}]},
+      { name:"IN", holes:[
+        {num:10,par:3,dist:135},{num:11,par:5,dist:470},{num:12,par:4,dist:353},
+        {num:13,par:4,dist:320},{num:14,par:3,dist:140},{num:15,par:4,dist:377},
+        {num:16,par:4,dist:421},{num:17,par:4,dist:401},{num:18,par:4,dist:365}]}
+    ]},
+  // 39. 福岡カンツリー倶楽部 和白コース
+  { id:"fukuoka_wajiro", name:"福岡カンツリー倶楽部 和白コース", area:"福岡市東区",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:5,dist:497},{num:2,par:3,dist:146},{num:3,par:4,dist:401},
+        {num:4,par:5,dist:532},{num:5,par:4,dist:276},{num:6,par:4,dist:313},
+        {num:7,par:3,dist:147},{num:8,par:4,dist:423},{num:9,par:4,dist:322}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:399},{num:11,par:5,dist:534},{num:12,par:3,dist:143},
+        {num:13,par:4,dist:321},{num:14,par:4,dist:329},{num:15,par:4,dist:408},
+        {num:16,par:3,dist:174},{num:17,par:4,dist:372},{num:18,par:5,dist:496}]}
+    ]},
+  // 40. 福岡国際カントリークラブ（36H）
+  { id:"fukuoka_intl", name:"福岡国際カントリークラブ", area:"宗像市",
+    courses:[
+      { name:"中山OUT", holes:[
+        {num:1,par:5,dist:493},{num:2,par:4,dist:435},{num:3,par:4,dist:389},
+        {num:4,par:4,dist:304},{num:5,par:3,dist:122},{num:6,par:4,dist:429},
+        {num:7,par:3,dist:191},{num:8,par:5,dist:495},{num:9,par:4,dist:334}]},
+      { name:"中山IN", holes:[
+        {num:10,par:4,dist:330},{num:11,par:5,dist:472},{num:12,par:4,dist:350},
+        {num:13,par:3,dist:167},{num:14,par:4,dist:308},{num:15,par:4,dist:391},
+        {num:16,par:5,dist:543},{num:17,par:3,dist:190},{num:18,par:4,dist:388}]},
+      { name:"七又OUT", holes:[
+        {num:1,par:4,dist:373},{num:2,par:4,dist:385},{num:3,par:4,dist:429},
+        {num:4,par:5,dist:563},{num:5,par:4,dist:310},{num:6,par:3,dist:191},
+        {num:7,par:5,dist:550},{num:8,par:4,dist:377},{num:9,par:3,dist:138}]},
+      { name:"七又IN", holes:[
+        {num:10,par:4,dist:300},{num:11,par:4,dist:382},{num:12,par:3,dist:170},
+        {num:13,par:5,dist:546},{num:14,par:3,dist:153},{num:15,par:4,dist:362},
+        {num:16,par:4,dist:354},{num:17,par:5,dist:500},{num:18,par:4,dist:339}]}
+    ]},
+  // 41. 福岡フェザントカントリークラブ（Par71）
+  { id:"fukuoka_pheasant", name:"福岡フェザントカントリークラブ", area:"田川郡川崎町",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:363},{num:2,par:3,dist:125},{num:3,par:5,dist:489},
+        {num:4,par:4,dist:364},{num:5,par:3,dist:125},{num:6,par:4,dist:320},
+        {num:7,par:4,dist:397},{num:8,par:3,dist:141},{num:9,par:5,dist:587}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:351},{num:11,par:5,dist:489},{num:12,par:4,dist:340},
+        {num:13,par:4,dist:401},{num:14,par:3,dist:156},{num:15,par:4,dist:430},
+        {num:16,par:3,dist:146},{num:17,par:4,dist:351},{num:18,par:5,dist:489}]}
+    ]},
+  // 42. 福岡センチュリーゴルフ倶楽部
+  { id:"fukuoka_century", name:"福岡センチュリーゴルフ倶楽部", area:"朝倉市",
+    courses:[
+      { name:"朝倉（OUT）", holes:[
+        {num:1,par:4,dist:272},{num:2,par:4,dist:386},{num:3,par:4,dist:392},
+        {num:4,par:3,dist:159},{num:5,par:4,dist:397},{num:6,par:4,dist:363},
+        {num:7,par:5,dist:527},{num:8,par:3,dist:176},{num:9,par:5,dist:549}]},
+      { name:"筑紫野（IN）", holes:[
+        {num:10,par:4,dist:386},{num:11,par:4,dist:385},{num:12,par:3,dist:154},
+        {num:13,par:4,dist:417},{num:14,par:4,dist:419},{num:15,par:5,dist:536},
+        {num:16,par:4,dist:407},{num:17,par:3,dist:164},{num:18,par:5,dist:554}]}
+    ]},
+  // 43. 福岡雷山ゴルフ倶楽部
+  { id:"raizan", name:"福岡雷山ゴルフ倶楽部", area:"糸島市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:366},{num:2,par:5,dist:585},{num:3,par:4,dist:324},
+        {num:4,par:3,dist:171},{num:5,par:5,dist:546},{num:6,par:4,dist:380},
+        {num:7,par:3,dist:167},{num:8,par:4,dist:305},{num:9,par:4,dist:372}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:416},{num:11,par:5,dist:486},{num:12,par:3,dist:216},
+        {num:13,par:4,dist:315},{num:14,par:4,dist:390},{num:15,par:4,dist:360},
+        {num:16,par:3,dist:171},{num:17,par:4,dist:350},{num:18,par:5,dist:537}]}
+    ]},
+  // 44. 福岡レイクサイドカントリークラブ
+  { id:"fukuoka_lakeside", name:"福岡レイクサイドカントリークラブ", area:"飯塚市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:372},{num:2,par:3,dist:172},{num:3,par:4,dist:329},
+        {num:4,par:5,dist:483},{num:5,par:4,dist:389},{num:6,par:4,dist:356},
+        {num:7,par:5,dist:505},{num:8,par:3,dist:120},{num:9,par:4,dist:393}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:486},{num:11,par:4,dist:373},{num:12,par:4,dist:375},
+        {num:13,par:3,dist:165},{num:14,par:4,dist:315},{num:15,par:4,dist:318},
+        {num:16,par:4,dist:386},{num:17,par:3,dist:125},{num:18,par:5,dist:470}]}
+    ]},
+  // 45. ミッションバレーゴルフクラブ
+  { id:"mission_valley", name:"ミッションバレーゴルフクラブ", area:"鞍手郡小竹町",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:403},{num:2,par:4,dist:395},{num:3,par:3,dist:152},
+        {num:4,par:4,dist:430},{num:5,par:5,dist:534},{num:6,par:4,dist:419},
+        {num:7,par:4,dist:326},{num:8,par:3,dist:187},{num:9,par:5,dist:495}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:362},{num:11,par:4,dist:342},{num:12,par:3,dist:133},
+        {num:13,par:4,dist:381},{num:14,par:5,dist:437},{num:15,par:4,dist:372},
+        {num:16,par:4,dist:385},{num:17,par:3,dist:172},{num:18,par:5,dist:536}]}
+    ]},
+  // 46. 京都カントリー倶楽部
+  { id:"miyako_cc", name:"京都カントリー倶楽部", area:"京都郡みやこ町",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:394},{num:2,par:5,dist:445},{num:3,par:5,dist:469},
+        {num:4,par:4,dist:406},{num:5,par:4,dist:331},{num:6,par:3,dist:137},
+        {num:7,par:4,dist:367},{num:8,par:3,dist:167},{num:9,par:4,dist:356}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:346},{num:11,par:4,dist:410},{num:12,par:3,dist:151},
+        {num:13,par:4,dist:377},{num:14,par:5,dist:470},{num:15,par:4,dist:377},
+        {num:16,par:4,dist:339},{num:17,par:3,dist:175},{num:18,par:5,dist:478}]}
+    ]},
+  // 47. 門司ゴルフ倶楽部（INは推定）
+  { id:"moji_gc", name:"門司ゴルフ倶楽部", area:"北九州市門司区",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:365},{num:2,par:5,dist:500},{num:3,par:3,dist:190},
+        {num:4,par:5,dist:535},{num:5,par:3,dist:155},{num:6,par:4,dist:390},
+        {num:7,par:4,dist:410},{num:8,par:4,dist:340},{num:9,par:4,dist:385}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:360},{num:11,par:4,dist:355},{num:12,par:3,dist:165},
+        {num:13,par:5,dist:490},{num:14,par:4,dist:380},{num:15,par:3,dist:175},
+        {num:16,par:4,dist:370},{num:17,par:5,dist:510},{num:18,par:4,dist:389}]}
+    ]},
+  // 48. 夜須高原カントリークラブ（27H・西/南は推定）
+  { id:"yasu_kogen", name:"夜須高原カントリークラブ", area:"朝倉郡筑前町",
+    courses:[
+      { name:"東", holes:[
+        {num:1,par:4,dist:343},{num:2,par:5,dist:467},{num:3,par:4,dist:360},
+        {num:4,par:3,dist:140},{num:5,par:4,dist:380},{num:6,par:4,dist:380},
+        {num:7,par:3,dist:182},{num:8,par:5,dist:557},{num:9,par:4,dist:400}]},
+      { name:"西", holes:[
+        {num:1,par:4,dist:375},{num:2,par:5,dist:515},{num:3,par:3,dist:170},
+        {num:4,par:4,dist:385},{num:5,par:4,dist:395},{num:6,par:3,dist:160},
+        {num:7,par:5,dist:505},{num:8,par:4,dist:410},{num:9,par:4,dist:398}]},
+      { name:"南", holes:[
+        {num:1,par:4,dist:355},{num:2,par:4,dist:365},{num:3,par:3,dist:155},
+        {num:4,par:5,dist:485},{num:5,par:4,dist:340},{num:6,par:3,dist:165},
+        {num:7,par:5,dist:495},{num:8,par:4,dist:378},{num:9,par:4,dist:349}]}
+    ]},
+  // 49. 八女上陽ゴルフ倶楽部
+  { id:"yame_joyo", name:"八女上陽ゴルフ倶楽部", area:"八女市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:384},{num:2,par:3,dist:173},{num:3,par:4,dist:426},
+        {num:4,par:5,dist:534},{num:5,par:4,dist:358},{num:6,par:3,dist:169},
+        {num:7,par:4,dist:316},{num:8,par:5,dist:521},{num:9,par:4,dist:414}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:453},{num:11,par:4,dist:334},{num:12,par:3,dist:211},
+        {num:13,par:4,dist:432},{num:14,par:4,dist:389},{num:15,par:4,dist:360},
+        {num:16,par:5,dist:505},{num:17,par:3,dist:142},{num:18,par:4,dist:417}]}
+    ]},
+  // 50. 若松ゴルフ倶楽部
+  { id:"wakamatsu_gc", name:"若松ゴルフ倶楽部", area:"北九州市若松区",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:341},{num:2,par:4,dist:370},{num:3,par:3,dist:157},
+        {num:4,par:5,dist:481},{num:5,par:4,dist:410},{num:6,par:5,dist:508},
+        {num:7,par:4,dist:444},{num:8,par:3,dist:196},{num:9,par:4,dist:364}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:424},{num:11,par:5,dist:500},{num:12,par:3,dist:168},
+        {num:13,par:4,dist:389},{num:14,par:4,dist:368},{num:15,par:3,dist:146},
+        {num:16,par:4,dist:391},{num:17,par:4,dist:338},{num:18,par:5,dist:481}]}
+    ]},
+  // 51. トライアルゴルフ＆リゾート WAKAMIYA
+  { id:"trial_wakamiya", name:"トライアルゴルフ＆リゾート WAKAMIYA", area:"宮若市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:357},{num:2,par:4,dist:367},{num:3,par:5,dist:502},
+        {num:4,par:3,dist:148},{num:5,par:4,dist:384},{num:6,par:4,dist:337},
+        {num:7,par:4,dist:402},{num:8,par:5,dist:493},{num:9,par:3,dist:186}]},
+      { name:"IN", holes:[
+        {num:10,par:5,dist:470},{num:11,par:3,dist:141},{num:12,par:4,dist:410},
+        {num:13,par:4,dist:353},{num:14,par:4,dist:339},{num:15,par:4,dist:384},
+        {num:16,par:3,dist:155},{num:17,par:5,dist:500},{num:18,par:4,dist:346}]}
+    ]},
+  // 52. NEWユーアイゴルフクラブ
+  { id:"new_youai", name:"NEWユーアイゴルフクラブ", area:"宗像市",
+    courses:[
+      { name:"玄界（OUT）", holes:[
+        {num:1,par:5,dist:518},{num:2,par:3,dist:179},{num:3,par:4,dist:405},
+        {num:4,par:4,dist:417},{num:5,par:4,dist:375},{num:6,par:5,dist:481},
+        {num:7,par:3,dist:147},{num:8,par:4,dist:332},{num:9,par:4,dist:334}]},
+      { name:"津屋崎（IN）", holes:[
+        {num:10,par:5,dist:513},{num:11,par:4,dist:382},{num:12,par:4,dist:371},
+        {num:13,par:3,dist:191},{num:14,par:5,dist:500},{num:15,par:4,dist:298},
+        {num:16,par:3,dist:162},{num:17,par:4,dist:258},{num:18,par:4,dist:371}]}
+    ]},
+  // 53. 福岡サンレイクゴルフ倶楽部
+  { id:"fukuoka_sunlake", name:"福岡サンレイクゴルフ倶楽部", area:"みやま市",
+    courses:[
+      { name:"OUT", holes:[
+        {num:1,par:4,dist:374},{num:2,par:3,dist:192},{num:3,par:4,dist:361},
+        {num:4,par:5,dist:498},{num:5,par:4,dist:350},{num:6,par:3,dist:144},
+        {num:7,par:4,dist:354},{num:8,par:4,dist:339},{num:9,par:5,dist:478}]},
+      { name:"IN", holes:[
+        {num:10,par:4,dist:301},{num:11,par:5,dist:559},{num:12,par:4,dist:350},
+        {num:13,par:4,dist:321},{num:14,par:3,dist:210},{num:15,par:4,dist:375},
+        {num:16,par:5,dist:522},{num:17,par:3,dist:142},{num:18,par:4,dist:351}]}
+    ]},
+  // 54. 大岳ショートコース（9H・全Par3）
+  { id:"otake_short", name:"大岳ショートコース", area:"福岡市東区",
+    courses:[
+      { name:"9ホール（パー3）", holes:[
+        {num:1,par:3,dist:128},{num:2,par:3,dist:150},{num:3,par:3,dist:162},
+        {num:4,par:3,dist:127},{num:5,par:3,dist:118},{num:6,par:3,dist:109},
+        {num:7,par:3,dist:160},{num:8,par:3,dist:148},{num:9,par:3,dist:97}]}
+    ]},
+  { id:"manual", name:"手動入力（コース名を入力）", area:"その他", courses:[] }
+];
+
+// ========== STATE ==========
+const KEY = 'golf3';
+let D = {
+  rounds: [],
+  settings: { clubs: ['DR','3W','UT','5I','6I','7I','8I','9I','PW','AW','52°','56°','PT'], savedPlayers: [] },
+  ri: -1, hi: 0, editing: null, selWx: '晴', selDir: '', selWind: '無風',
+  _selectedPlayers: []
+};
+
+function loadData() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+    if(saved.rounds) D.rounds = saved.rounds;
+    if(saved.settings) D.settings = Object.assign(D.settings, saved.settings);
+  } catch(e) {}
+}
+function sv() { localStorage.setItem(KEY, JSON.stringify({ rounds: D.rounds, settings: D.settings })); }
+const $ = id => document.getElementById(id);
+const rnd = () => D.rounds[D.ri];
+const hole = () => rnd().holes[D.hi];
+
+function go(id) {
+  const prev = document.querySelector('.screen.active');
+  if(prev) { prev.classList.add('left'); prev.classList.remove('active'); }
+  const el = $(id);
+  el.classList.remove('left');
+  el.classList.add('active');
+  el.scrollTop = 0;
+  onScreen(id);
+}
+function back(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','left'));
+  $(id).classList.add('active');
+  $(id).scrollTop = 0;
+  onScreen(id);
+}
+function onScreen(id) {
+  if(id==='s-home') renderHome();
+  if(id==='s-holes') renderHoles();
+  if(id==='s-shots') renderShots();
+  if(id==='s-summary') renderSummary();
+  if(id==='s-settings') renderSettings();
+  if(id==='s-new-round') initNewRound();
+}
+
+function pick(el) {
+  el.parentElement.querySelectorAll('.tp').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+function getSel(id) {
+  const el = document.querySelector('#'+id+' .tp.on');
+  if(!el) return '';
+  const t = el.textContent.trim();
+  // "A 最高" のような場合は最初の単語のみ返す
+  return t.split(/\s+/)[0];
+}
+function clearSel(...ids) {
+  ids.forEach(id => document.querySelectorAll('#'+id+' .tp').forEach(b => b.classList.remove('on')));
+}
+function setSel(id, val) {
+  document.querySelectorAll('#'+id+' .tp').forEach(b => {
+    if(b.textContent.trim().split(/\s+/)[0] === val) b.classList.add('on');
+  });
+}
+function pickWx(el, val) {
+  document.querySelectorAll('#wx-grp .wx-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  D.selWx = val;
+}
+function pickW(el, val) {
+  document.querySelectorAll('#wind-compass .wbtn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  D.selWind = val;
+}
+function pickDir(val) {
+  D.selDir = val;
+  ['dir-left','dir-center','dir-right'].forEach(id => $(id).classList.remove('on'));
+  if(val==='左') $('dir-left').classList.add('on');
+  else if(val==='真ん中') $('dir-center').classList.add('on');
+  else if(val==='右') $('dir-right').classList.add('on');
+}
+
+// ========== SETTINGS ==========
+const ALL_CLUBS = ['DR','3W','5W','UT','3I','4I','5I','6I','7I','8I','9I','PW','AW','48°','50°','52°','54°','56°','58°','60°','PT'];
+
+function renderSettings() {
+  const grid = $('club-setting-grid');
+  grid.innerHTML = ALL_CLUBS.map(c =>
+    `<div class="cg-btn ${D.settings.clubs.includes(c)?'on':''}" onclick="toggleClub(this)">${c}</div>`
+  ).join('');
+  renderSavedPlayers();
+}
+function toggleClub(el) { el.classList.toggle('on'); }
+function addSavedPlayer() {
+  const inp = $('new-player-inp');
+  const name = inp.value.trim();
+  if(!name) return;
+  if(!D.settings.savedPlayers.includes(name)) D.settings.savedPlayers.push(name);
+  inp.value = '';
+  renderSavedPlayers();
+}
+function renderSavedPlayers() {
+  $('saved-players').innerHTML = D.settings.savedPlayers.map((p,i) =>
+    `<span class="ptag rm" onclick="removeSavedPlayer(${i})">${p}</span>`
+  ).join('') || '<div style="font-size:13px;color:var(--mt)">まだ登録されていません</div>';
+}
+function removeSavedPlayer(i) {
+  D.settings.savedPlayers.splice(i,1);
+  renderSavedPlayers();
+}
+function saveSettings() {
+  D.settings.clubs = [...document.querySelectorAll('#club-setting-grid .cg-btn.on')].map(b => b.textContent);
+  sv();
+  back('s-home');
+}
+
+// ========== NEW ROUND ==========
+function initNewRound() {
+  const csel = $('r-course-sel');
+  csel.innerHTML = '<option value="">-- コースを選択 --</option>' +
+    FUKUOKA.map(c => `<option value="${c.id}">${c.name}（${c.area}）</option>`).join('');
+
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd = String(today.getDate()).padStart(2,'0');
+  $('r-date').value = `${yyyy}-${mm}-${dd}`;
+
+  D._selectedPlayers = [];
+  $('sel-players').innerHTML = '';
+  updatePlayerSlotWarn();
+  renderPlayerCandidates();
+}
+function onCourseChange() {
+  const id = $('r-course-sel').value;
+  const half = $('r-course-half');
+  const manual = $('r-manual-name');
+  const course = FUKUOKA.find(c => c.id === id);
+  half.innerHTML = '<option value="">-- 選択 --</option>';
+  manual.style.display = 'none';
+  if(!course) return;
+  if(id === 'manual') { manual.style.display='block'; return; }
+  if(!course.courses.length) {
+    half.innerHTML += '<option value="-1">このコースは詳細データ未登録（18ホール自動生成）</option>';
+    return;
+  }
+  course.courses.forEach((c,i) => {
+    half.innerHTML += `<option value="${i}">${c.name}</option>`;
+  });
+  // 2コースあれば自動でアウト＋イン組み合わせオプションも追加
+  if(course.courses.length >= 2) {
+    half.innerHTML += `<option value="combo-01">${course.courses[0].name} → ${course.courses[1].name}（18H）</option>`;
+  }
+}
+
+function renderPlayerCandidates() {
+  const cands = $('player-candidates');
+  const full = D._selectedPlayers.length >= 3;
+  cands.innerHTML = full ? '' : D.settings.savedPlayers
+    .filter(p => !D._selectedPlayers.includes(p))
+    .map(p => `<span class="ptag" onclick="addPlayerByName('${p.replace(/'/g,"\\'")}')">${p} ＋</span>`).join('');
+}
+function updatePlayerSlotWarn() {
+  const c = D._selectedPlayers.length;
+  $('player-slot-warn').textContent = c >= 3 ? '※最大3人まで選択できます' : `現在 ${c}人選択中（1〜3人まで）`;
+}
+function addPlayer() {
+  const inp = $('r-player-inp');
+  const name = inp.value.trim();
+  if(!name) return;
+  if(D._selectedPlayers.includes(name)) { inp.value=''; return; }
+  if(D._selectedPlayers.length >= 3) { inp.value=''; alert('同伴者は最大3人までです'); return; }
+  D._selectedPlayers.push(name);
+  if(!D.settings.savedPlayers.includes(name)) D.settings.savedPlayers.push(name);
+  inp.value = '';
+  updateSelectedPlayers();
+}
+function addPlayerByName(name) {
+  if(D._selectedPlayers.includes(name)) return;
+  if(D._selectedPlayers.length >= 3) { alert('同伴者は最大3人までです'); return; }
+  D._selectedPlayers.push(name);
+  updateSelectedPlayers();
+}
+function removePlayer(i) {
+  D._selectedPlayers.splice(i,1);
+  updateSelectedPlayers();
+}
+function updateSelectedPlayers() {
+  $('sel-players').innerHTML = D._selectedPlayers.map((p,i) =>
+    `<span class="ptag rm" onclick="removePlayer(${i})">${p}</span>`
+  ).join('');
+  updatePlayerSlotWarn();
+  renderPlayerCandidates();
+}
+
+function startRound() {
+  const courseId = $('r-course-sel').value;
+  const course = FUKUOKA.find(c => c.id === courseId);
+  const halfVal = $('r-course-half').value;
+  const courseName = courseId==='manual' ? ($('r-course-manual').value||'コース') :
+                     course ? course.name : 'コース';
+  let halfName = '';
+  let holes;
+
+  if(course && course.id !== 'manual' && course.courses.length) {
+    if(halfVal === 'combo-01') {
+      halfName = `${course.courses[0].name}→${course.courses[1].name}`;
+      holes = [...course.courses[0].holes, ...course.courses[1].holes].map(h => ({
+        num: h.num, par: h.par, dist: h.dist, wind: '無風', shots: [], result: null
+      }));
+    } else {
+      const halfIdx = parseInt(halfVal);
+      if(!isNaN(halfIdx) && halfIdx >= 0 && course.courses[halfIdx]) {
+        halfName = course.courses[halfIdx].name;
+        holes = course.courses[halfIdx].holes.map(h => ({
+          num: h.num, par: h.par, dist: h.dist, wind: '無風', shots: [], result: null
+        }));
+        // 9ホールしかない場合は18ホールまで番号を埋める
+        if(holes.length === 9) {
+          const startNum = holes[holes.length-1].num + 1;
+          for(let i=0;i<9;i++) {
+            holes.push({num:startNum+i, par:4, dist:0, wind:'無風', shots:[], result:null});
+          }
+        }
+      } else {
+        // 詳細データなしの場合
+        holes = Array.from({length:18},(_,i) => ({num:i+1,par:4,dist:0,wind:'無風',shots:[],result:null}));
+      }
+    }
+  } else {
+    holes = Array.from({length:18},(_,i) => ({num:i+1,par:4,dist:0,wind:'無風',shots:[],result:null}));
+  }
+
+  const dateVal = $('r-date').value;
+  const dispDate = dateVal ? dateVal.replace(/-/g,'/') : '';
+
+  const r = {
+    course: courseName, half: halfName,
+    date: dispDate, time: $('r-time').value,
+    weather: D.selWx, players: [...(D._selectedPlayers||[])],
+    holes
+  };
+  D.rounds.push(r);
+  D.ri = D.rounds.length-1;
+  sv();
+  go('s-holes');
+}
+
+function renderHome() {
+  const el = $('home-hist');
+  if(!D.rounds.length) { el.innerHTML=''; return; }
+  el.innerHTML = '<div class="sec-hdr">過去のラウンド</div>' +
+    D.rounds.slice().reverse().map((r,i) => {
+      const ri = D.rounds.length-1-i;
+      const done = r.holes.filter(h=>h.result);
+      const tot = done.reduce((s,h)=>s+h.result.score,0);
+      const par = done.reduce((s,h)=>s+h.par,0);
+      const diff = tot-par;
+      const wxIcon = {晴:'☀️',曇:'☁️',雨:'🌧',雪:'❄️'}[r.weather]||'';
+      return `<div style="padding:0 14px 10px"><div class="card" style="cursor:pointer;margin-bottom:0" onclick="loadRound(${ri})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-weight:700;font-size:15px">${r.course}${r.half?' '+r.half:''}</div>
+            <div style="font-size:12px;color:var(--mt);margin-top:2px">${r.date||''}${r.time?' '+r.time:''} ${wxIcon}</div>
+            ${r.players&&r.players.length?`<div style="font-size:12px;color:var(--mt)">同伴: ${r.players.join('・')}</div>`:''}
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:28px;font-weight:800;letter-spacing:-1px">${tot||'−'}</div>
+            ${done.length?`<div style="font-size:13px;color:${diff>0?'var(--red)':diff<0?'var(--blue)':'var(--g)'};font-weight:700">${diff>0?'+'+diff:diff===0?'E':diff}</div>`:''}
+            <div style="font-size:11px;color:var(--mt)">${done.length}H</div>
+          </div>
+        </div>
+      </div></div>`;
+    }).join('');
+}
+function loadRound(i) { D.ri=i; go('s-holes'); }
+
+function renderHoles() {
+  const r = rnd(); if(!r) return;
+  $('holes-ttl').textContent = r.course+(r.half?' '+r.half:'');
+  const done = r.holes.filter(h=>h.result);
+  const tot = done.reduce((s,h)=>s+h.result.score,0);
+  const par = done.reduce((s,h)=>s+h.par,0);
+  const diff = tot-par;
+  const wxIcon = {晴:'☀️',曇:'☁️',雨:'🌧',雪:'❄️'}[r.weather]||'';
+  $('holes-summary').innerHTML = `<div class="card" style="margin-bottom:0">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:12px;color:var(--mt)">${r.date||''} ${wxIcon} ${r.players&&r.players.length?r.players.join('・'):''}</div>
+        <div style="font-size:30px;font-weight:800;letter-spacing:-1px">${tot||'−'}</div>
+      </div>
+      <div style="text-align:right">
+        ${done.length?`<div style="font-size:20px;font-weight:800;color:${diff>0?'var(--red)':diff<0?'var(--blue)':'var(--g)'}">${diff>0?'+'+diff:diff===0?'E':diff}</div>`:''}
+        <div style="font-size:13px;color:var(--mt)">${done.length}H完了</div>
+      </div>
+    </div>
+  </div>`;
+  $('holes-list').innerHTML = r.holes.map((h,i) => {
+    const d = h.result;
+    const diff2 = d ? h.result.score-h.par : null;
+    const dc = diff2===null?'':(diff2<=-2?'s-eagle':diff2===-1?'s-birdie':diff2===0?'s-par':diff2===1?'s-bogey':'s-dbl');
+    const ds = diff2===null?'':(diff2<=-2?'eagle':diff2===-1?'birdie':diff2===0?'E':diff2===1?'+1':'+'+diff2);
+    const circ = i===D.hi&&!d?'cur':d?'done':'';
+    return `<div class="lrow" onclick="openHole(${i})">
+      <div class="hcirc ${circ}">${h.num}</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:600">${h.num}H <span style="font-weight:400;font-size:13px;color:var(--mt)">Par${h.par}${h.dist?' · '+h.dist+'Y':''}</span></div>
+        <div style="font-size:12px;color:var(--mt)">${h.shots.length}ショット${d?' · '+h.result.score+'打 ('+h.result.on+'オン'+h.result.putt+'パット)':''}</div>
+      </div>
+      <div class="${dc}" style="font-size:16px;font-weight:800">${ds}</div>
+    </div>`;
+  }).join('');
+}
+
+function openHole(i) {
+  D.hi = i;
+  const h = hole();
+  $('hs-ttl').textContent = `${h.num}H 設定`;
+  clearSel('sel-par');
+  setSel('sel-par', String(h.par));
+  $('h-dist').value = h.dist||'';
+  document.querySelectorAll('#wind-compass .wbtn').forEach(b => b.classList.remove('on'));
+  const centerBtn = document.querySelector('#wind-compass .wbtn.center');
+  if(!h.wind||h.wind==='無風') centerBtn.classList.add('on');
+  else {
+    document.querySelectorAll('#wind-compass .wbtn').forEach(b => {
+      const lbl = b.querySelector('div:last-child');
+      if(lbl && (h.wind.includes(lbl.textContent) || lbl.textContent.includes(h.wind.substring(0,2)))) b.classList.add('on');
+    });
+  }
+  D.selWind = h.wind||'無風';
+  go('s-hole-start');
+}
+
+function startHole() {
+  const h = hole();
+  h.par = parseInt(getSel('sel-par'))||4;
+  h.dist = parseInt($('h-dist').value)||0;
+  h.wind = D.selWind||'無風';
+  sv();
+  $('shots-ttl').textContent = `${h.num}H · Par${h.par}`;
+  $('shots-info').textContent = `${h.dist?h.dist+'Y · ':''}風: ${h.wind}`;
+  $('result-ttl').textContent = `${h.num}H 結果入力`;
+  const prog = Math.round((D.hi+1)/rnd().holes.length*100);
+  $('hole-prog').style.width = prog+'%';
+  go('s-shots');
+}
+
+function renderShots() {
+  const h = hole(); if(!h) return;
+  $('shots-ttl').textContent = `${h.num}H · Par${h.par}`;
+  $('shots-info').textContent = `${h.dist?h.dist+'Y · ':''}風: ${h.wind}`;
+  if(!h.shots.length) {
+    $('shots-list').innerHTML = '<div style="padding:28px;text-align:center;color:var(--mt);font-size:14px">まだショットがありません<br><span style="font-size:12px">右上の「＋ 追加」からどうぞ</span></div>';
+    return;
+  }
+  $('shots-list').innerHTML = h.shots.map((s,i) => `
+    <div class="lrow" style="flex-direction:column;align-items:flex-start;cursor:pointer" onclick="editShot(${i})">
+      <div style="display:flex;align-items:center;gap:8px;width:100%;margin-bottom:4px">
+        <span style="font-size:12px;color:var(--mt);min-width:28px">${i+1}打</span>
+        <span style="font-size:15px;font-weight:700">${s.club||'−'}</span>
+        ${s.eval?`<span class="badge b${s.eval}">${s.eval}</span>`:''}
+        <span style="font-size:12px;color:var(--sub);margin-left:auto">編集 ›</span>
+      </div>
+      <div style="font-size:12px;color:var(--mt);padding-left:36px;line-height:1.6">
+        ${[s.dir,s.shape,s.miss,s.land,s.remain?s.remain+'Y残':'',s.dist?s.dist+'Y飛':''].filter(Boolean).join(' · ')}
+        ${s.memo?'<br>'+s.memo:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function buildClubSelector() {
+  $('sel-club').innerHTML = D.settings.clubs.map(c =>
+    `<div class="tp" onclick="pick(this)">${c}</div>`
+  ).join('');
+}
+
+function openAdd() {
+  D.editing = null;
+  buildClubSelector();
+  clearSel('sel-club','sel-eval','sel-shape','sel-miss','sel-land','sel-lie');
+  D.selDir = '';
+  ['dir-left','dir-center','dir-right'].forEach(id => $(id).classList.remove('on'));
+  ['s-remain','s-dist','s-memo'].forEach(id => $(id).value='');
+  const h = hole();
+  $('add-ttl').textContent = `${h.num}H · ${h.shots.length+1}打目`;
+  go('s-add-shot');
+}
+
+function editShot(i) {
+  D.editing = i;
+  buildClubSelector();
+  const s = hole().shots[i];
+  clearSel('sel-club','sel-eval','sel-shape','sel-miss','sel-land','sel-lie');
+  ['dir-left','dir-center','dir-right'].forEach(id => $(id).classList.remove('on'));
+  if(s.club) setSel('sel-club',s.club);
+  if(s.eval) setSel('sel-eval',s.eval);
+  if(s.shape) setSel('sel-shape',s.shape);
+  if(s.miss) setSel('sel-miss',s.miss);
+  if(s.land) setSel('sel-land',s.land);
+  if(s.lie) setSel('sel-lie',s.lie);
+  D.selDir = s.dir||'';
+  if(s.dir==='左') $('dir-left').classList.add('on');
+  else if(s.dir==='真ん中') $('dir-center').classList.add('on');
+  else if(s.dir==='右') $('dir-right').classList.add('on');
+  $('s-remain').value = s.remain||'';
+  $('s-dist').value = s.dist||'';
+  $('s-memo').value = s.memo||'';
+  const h = hole();
+  $('add-ttl').textContent = `${h.num}H · ${i+1}打目（編集）`;
+  go('s-add-shot');
+}
+
+function saveShot() {
+  const shot = {
+    club: getSel('sel-club'), dir: D.selDir,
+    eval: getSel('sel-eval'), shape: getSel('sel-shape'),
+    miss: getSel('sel-miss'), land: getSel('sel-land'), lie: getSel('sel-lie'),
+    remain: parseInt($('s-remain').value)||0,
+    dist: parseInt($('s-dist').value)||0,
+    memo: $('s-memo').value
+  };
+  const h = hole();
+  if(D.editing!==null) h.shots[D.editing]=shot;
+  else h.shots.push(shot);
+  sv();
+  back('s-shots');
+}
+
+function chkScore() {
+  const h = hole();
+  const auto = h.shots.length;
+  const inp = parseInt($('h-score').value);
+  $('auto-sc').textContent = auto;
+  $('score-warn').style.display = (inp && inp!==auto) ? 'block' : 'none';
+}
+
+function saveResult() {
+  const h = hole();
+  h.result = {
+    on: parseInt(getSel('sel-on'))||0,
+    putt: parseInt(getSel('sel-putt'))||0,
+    score: parseInt($('h-score').value)||h.shots.length,
+    p1d: $('p1d').value, p1r: getSel('sel-p1'), p1m: $('p1m').value
+  };
+  sv();
+  clearSel('sel-on','sel-putt','sel-p1');
+  ['h-score','p1d','p1m'].forEach(id => $(id).value='');
+  $('score-warn').style.display='none';
+  const hs = rnd().holes;
+  const next = hs.findIndex((h2,i) => i > D.hi && !h2.result);
+  if(next !== -1) { openHole(next); }
+  else { back('s-holes'); }
+}
+
+function showTab(id, el) {
+  ['t-score','t-detail','t-analysis','t-copy'].forEach(t => $(t).style.display='none');
+  $(id).style.display='block';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  if(id==='t-copy') buildCopy();
+}
+
+function renderSummary() {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('on',i===0));
+  ['t-detail','t-analysis','t-copy'].forEach(t => $(t).style.display='none');
+  $('t-score').style.display='block';
+  const r = rnd(); if(!r) return;
+  const done = r.holes.filter(h=>h.result);
+  const tot = done.reduce((s,h)=>s+h.result.score,0);
+  const par = done.reduce((s,h)=>s+h.par,0);
+  const putts = done.reduce((s,h)=>s+h.result.putt,0);
+  const all = r.holes.flatMap(h=>h.shots);
+  const diff = tot-par;
+
+  $('t-score').innerHTML = `
+    <div class="sgrid">
+      <div class="scard"><div class="n">${tot||'−'}</div><div class="l">スコア</div></div>
+      <div class="scard"><div class="n ${diff>0?'s-bogey':diff<0?'s-birdie':'s-par'}">${diff>0?'+'+diff:diff===0?'E':diff}</div><div class="l">対パー(${done.length}H)</div></div>
+      <div class="scard"><div class="n">${putts}</div><div class="l">総パット</div></div>
+      <div class="scard"><div class="n">${all.length}</div><div class="l">総ショット</div></div>
+    </div>
+    <div class="card">
+      <table style="width:100%;font-size:13px;border-collapse:collapse">
+        <tr style="color:var(--mt)">
+          <th style="padding:5px 4px;text-align:left;font-weight:600">H</th>
+          <th style="text-align:center;font-weight:600">Par</th>
+          <th style="text-align:center;font-weight:600">スコア</th>
+          <th style="text-align:center;font-weight:600">打数</th>
+          <th style="text-align:center;font-weight:600">パット</th>
+        </tr>
+        ${r.holes.filter(h=>h.result).map(h=>{
+          const d=h.result.score-h.par;
+          const cls=d<=-2?'s-eagle':d===-1?'s-birdie':d===0?'s-par':d===1?'s-bogey':'s-dbl';
+          const ds=d<=-2?'▲▲':d===-1?'▲':d===0?'−':d===1?'+1':'+'+d;
+          return `<tr>
+            <td style="padding:7px 4px;font-weight:700">${h.num}H</td>
+            <td style="text-align:center">${h.par}</td>
+            <td style="text-align:center;font-weight:800" class="${cls}">${h.result.score}(${ds})</td>
+            <td style="text-align:center;color:var(--mt)">${h.shots.length}</td>
+            <td style="text-align:center;color:var(--mt)">${h.result.putt}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>`;
+
+  $('t-detail').innerHTML = r.holes.map(h => {
+    if(!h.shots.length&&!h.result) return '';
+    return `<div class="card" style="margin-bottom:10px">
+      <div style="font-weight:700;margin-bottom:10px">${h.num}H Par${h.par}${h.dist?' · '+h.dist+'Y':''}${h.wind&&h.wind!='無風'?' · 風:'+h.wind:''}</div>
+      ${h.shots.map((s,i)=>`<div style="padding:8px 0;border-bottom:.5px solid var(--bd)">
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="color:var(--mt);font-size:12px;min-width:28px">${i+1}打</span>
+          <span style="font-weight:700">${s.club||'−'}</span>
+          ${s.eval?`<span class="badge b${s.eval}">${s.eval}</span>`:''}
+        </div>
+        <div style="font-size:12px;color:var(--mt);margin-top:2px;padding-left:36px">
+          ${[s.dir,s.shape,s.miss,s.land,s.remain?s.remain+'Y残':'',s.dist?s.dist+'Y飛':''].filter(Boolean).join(' · ')}
+          ${s.memo?'<br>'+s.memo:''}
+        </div>
+      </div>`).join('')}
+      ${h.result?`<div style="background:var(--bg);border-radius:var(--rs);padding:10px 12px;margin-top:8px;font-size:13px">
+        ${h.result.on}オン${h.result.putt}パット → <strong>${h.result.score}打</strong>
+        ${h.result.p1d?' · 1パット目:'+h.result.p1d+'歩 '+h.result.p1r:''}
+      </div>`:''}
+    </div>`;
+  }).join('');
+
+  const ec={},mc={},dc={左:0,真ん中:0,右:0};
+  all.forEach(s=>{
+    if(s.eval) ec[s.eval]=(ec[s.eval]||0)+1;
+    if(s.miss&&s.miss!=='ナイス'&&s.miss!=='クリーン') mc[s.miss]=(mc[s.miss]||0)+1;
+    if(s.dir) dc[s.dir]=(dc[s.dir]||0)+1;
+  });
+  const tot2=all.length||1;
+  const ecols={A:'#1D9E75',B:'#378ADD',C:'#BA7517',D:'#D85A30',E:'#E24B4A'};
+  $('t-analysis').innerHTML = `
+    <div class="card" style="margin-bottom:10px">
+      <div class="ctit">自己評価分布</div>
+      ${['A','B','C','D','E'].map(k=>{const n=ec[k]||0;const p=Math.round(n/tot2*100);return`
+        <div class="brow"><span class="badge b${k}" style="min-width:22px;text-align:center">${k}</span>
+        <div class="btrk"><div class="bfill" style="width:${p}%;background:${ecols[k]}"></div></div>
+        <span style="font-size:12px;color:var(--mt);min-width:52px;text-align:right">${n}回(${p}%)</span></div>`;}).join('')}
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="ctit">打ち出し方向傾向</div>
+      ${['左','真ん中','右'].map(k=>{const n=dc[k]||0;const p=Math.round(n/tot2*100);return`
+        <div class="brow"><span style="font-size:13px;min-width:52px">${k}</span>
+        <div class="btrk"><div class="bfill" style="width:${p}%;background:var(--blue)"></div></div>
+        <span style="font-size:12px;color:var(--mt);min-width:52px;text-align:right">${n}回(${p}%)</span></div>`;}).join('')}
+    </div>
+    ${Object.keys(mc).length?`<div class="card">
+      <div class="ctit">ミスランキング</div>
+      ${Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,n])=>{const p=Math.round(n/tot2*100);return`
+        <div class="brow"><span style="font-size:13px;min-width:64px">${k}</span>
+        <div class="btrk"><div class="bfill" style="width:${p}%;background:var(--red)"></div></div>
+        <span style="font-size:12px;color:var(--mt);min-width:52px;text-align:right">${n}回</span></div>`;}).join('')}
+    </div>`:''}`;
+}
+
+function buildCopy() {
+  const r = rnd();
+  const done = r.holes.filter(h=>h.result);
+  const tot = done.reduce((s,h)=>s+h.result.score,0);
+  const par = done.reduce((s,h)=>s+h.par,0);
+  const wxIcon = {晴:'☀',曇:'☁',雨:'雨',雪:'雪'}[r.weather]||'';
+  let t=`【ラウンド情報】\nコース：${r.course}${r.half?' '+r.half:''}\n日付：${r.date||''}${r.time?' '+r.time:''} ${wxIcon}\n`;
+  if(r.players&&r.players.length) t+=`同伴：${r.players.join('・')}\n`;
+  t+=`スコア：${tot}（対Par${tot-par>=0?'+':''}${tot-par}）\n\n【各ホール詳細】\n`;
+  r.holes.forEach(h=>{
+    if(!h.shots.length&&!h.result) return;
+    t+=`\n▼ ${h.num}H Par${h.par}${h.dist?' '+h.dist+'Y':''}${h.wind&&h.wind!='無風'?' 風:'+h.wind:''}\n`;
+    h.shots.forEach((s,i)=>{
+      t+=`  ${i+1}打目：${s.club||'−'} / 方向:${s.dir||'−'} / ${[s.shape,s.miss].filter(Boolean).join('・')} / 着地:${s.land||'−'}`;
+      if(s.remain) t+=` / 残${s.remain}Y`;
+      if(s.dist) t+=` / 飛${s.dist}Y`;
+      if(s.eval) t+=` [自己評価:${s.eval}]`;
+      if(s.memo) t+=` (${s.memo})`;
+      t+='\n';
+    });
+    if(h.result){
+      t+=`  結果：${h.result.on}オン${h.result.putt}パット → ${h.result.score}打`;
+      if(h.result.p1d) t+=` / 1パット目:${h.result.p1d}歩 ${h.result.p1r||''}${h.result.p1m?' ('+h.result.p1m+')':''}`;
+      t+='\n';
+    }
+  });
+  const all=r.holes.flatMap(h=>h.shots);
+  const ec={},mc={},dc={};
+  all.forEach(s=>{
+    if(s.eval) ec[s.eval]=(ec[s.eval]||0)+1;
+    if(s.miss&&s.miss!=='ナイス'&&s.miss!=='クリーン') mc[s.miss]=(mc[s.miss]||0)+1;
+    if(s.dir) dc[s.dir]=(dc[s.dir]||0)+1;
+  });
+  t+=`\n【全体傾向】\n評価：${Object.entries(ec).map(([k,v])=>k+':'+v+'回').join(' / ')}\n`;
+  t+=`方向：${Object.entries(dc).map(([k,v])=>k+':'+v+'回').join(' / ')}\n`;
+  const top=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  if(top.length) t+=`主なミス：${top.map(([k,v])=>k+'('+v+'回)').join('、')}\n`;
+  t+=`\n以上のデータをもとに、このラウンドの傾向と改善点を分析してください。`;
+  $('t-copy').innerHTML=`<div class="card">
+    <div class="ctit" style="margin-bottom:8px">ChatGPT用レポート</div>
+    <textarea class="copy-area" id="copy-ta" readonly>${t}</textarea>
+    <button class="btn btn-p" style="margin-top:10px" onclick="doCopy()">📋 全文コピー</button>
+  </div>`;
+}
+
+function doCopy() {
+  const ta = $('copy-ta');
+  const text = ta.value;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.querySelector('#t-copy .btn');
+    btn.textContent='✅ コピーしました！';
+    setTimeout(()=>btn.textContent='📋 全文コピー',2500);
+  }).catch(()=>{
+    ta.select(); document.execCommand('copy');
+    const btn = document.querySelector('#t-copy .btn');
+    btn.textContent='✅ コピーしました！';
+    setTimeout(()=>btn.textContent='📋 全文コピー',2500);
+  });
+}
+
+loadData();
+renderHome();
+</script>
+</body>
+</html>
