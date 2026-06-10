@@ -294,6 +294,26 @@ input[type=date],input[type=time]{color-scheme:light}
 .home-anal-card{margin:0 14px 14px;background:var(--surf);border-radius:18px;border:1px solid #EFF3EE;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow:hidden}
 .home-anal-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;font-size:13px;font-weight:800}
 .home-anal-body{padding:0 16px 14px}
+/* ウェッジ距離別成功率（案2配色） */
+.wedge-card .wsub{font-size:10px;color:var(--sub);font-weight:400}
+.wedge-card .wblock{margin-bottom:16px}
+.wedge-card .wblock:last-of-type{margin-bottom:0}
+.wedge-card .wname{font-size:13px;font-weight:800;color:#1f2937;margin-bottom:9px;display:flex;justify-content:space-between;align-items:baseline}
+.wedge-card .wname .agg{font-size:11px;font-weight:700;color:#9ca3af}
+.wedge-card .yd-row{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.wedge-card .yd-label{flex:0 0 46px;font-size:12px;font-weight:700;text-align:right;color:#374151}
+.wedge-card .yd-bar{flex:1;height:24px;border-radius:7px;overflow:hidden;background:#F1F2F4}
+.wedge-card .yd-fill{height:100%;display:flex;align-items:center;padding-left:9px;font-size:11px;font-weight:800;white-space:nowrap;transition:width .4s}
+.wedge-card .yd-fill.hi{background:#10B981;color:#fff}
+.wedge-card .yd-fill.mid{background:#F4B740;color:#5b4108}
+.wedge-card .yd-fill.lo{background:#EF4444;color:#fff}
+.wedge-card .yd-cnt{flex:0 0 58px;font-size:11px;text-align:right;color:var(--sub)}
+.wedge-card .wfew{display:block;font-size:9px;color:#c4a04a}
+.wedge-card .wlegend{font-size:11px;color:#6b7280;margin-top:12px;line-height:1.7;background:#F7F8F9;padding:9px 11px;border-radius:9px}
+.wedge-card .wsw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:middle;margin-right:4px}
+.wedge-card .wsw.hi{background:#10B981}
+.wedge-card .wsw.mid{background:#F4B740}
+.wedge-card .wsw.lo{background:#EF4444}
 .period-tabs{display:flex;gap:3px;background:var(--bg);border-radius:8px;padding:3px}
 .period-tab{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--mt);transition:all .15s;user-select:none}
 .period-tab.on{background:var(--g);color:#fff;box-shadow:0 1px 3px rgba(15,110,85,.3)}
@@ -2018,6 +2038,78 @@ function buildClubStats(shots) {
   })).sort((a,b) => clubOrder(a.club) - clubOrder(b.club));
 }
 
+// ===== ウェッジ距離別成功率 =====
+const WEDGE_CLUBS = ['PW','52°','56°'];
+// 距離の5ヤードバケット丸め：3捨4入・8捨9入
+//  下1桁 0-3→0 / 4-8→5 / 9→繰上0
+function bucket5(yd) {
+  const base = Math.floor(yd / 10) * 10;
+  const ones = yd - base;
+  if(ones <= 3) return base;
+  if(ones <= 8) return base + 5;
+  return base + 10;
+}
+// 成功判定：グリーンオン or 自己評価A・B
+function isWedgeSuccess(s) {
+  if(s.land === 'グリーンオン') return true;
+  if(s.eval === 'A' || s.eval === 'B') return true;
+  return false;
+}
+// ウェッジ成功率データ構築（20〜110Yの範囲、使用バケットのみ）
+// 距離は「そのショットを打った時点の残りヤード(remain)」を使用（着地結果に関わらず全ショット対象）
+function buildWedgeStats(shots) {
+  const result = {};  // club -> { buckets: {yd:{ok,tot}}, ok, tot }
+  WEDGE_CLUBS.forEach(c => result[c] = { buckets: {}, ok: 0, tot: 0 });
+  shots.forEach(s => {
+    if(!WEDGE_CLUBS.includes(s.club)) return;
+    const d = s.remain || 0;  // 打った距離
+    if(d < 18 || d > 113) return;  // 丸め後20〜110Yに入る範囲
+    const b = bucket5(d);
+    if(b < 20 || b > 110) return;
+    const r = result[s.club];
+    if(!r.buckets[b]) r.buckets[b] = { ok: 0, tot: 0 };
+    const win = isWedgeSuccess(s) ? 1 : 0;
+    r.buckets[b].ok += win; r.buckets[b].tot++;
+    r.ok += win; r.tot++;
+  });
+  return result;
+}
+// 成功率→色クラス
+function wrateClass(pct) {
+  if(pct >= 70) return 'hi';
+  if(pct >= 40) return 'mid';
+  return 'lo';
+}
+// ウェッジ成功率カードのHTML生成
+function renderWedgeCard(shots) {
+  const stats = buildWedgeStats(shots);
+  const usedClubs = WEDGE_CLUBS.filter(c => stats[c].tot > 0);
+  if(!usedClubs.length) return '';
+  let h = `<div class="analysis-card wedge-card"><h4>🎯 ウェッジ距離別 成功率 <span class="wsub">20〜110Y・5刻み</span></h4>`;
+  usedClubs.forEach(c => {
+    const r = stats[c];
+    const aggPct = Math.round(r.ok / r.tot * 100);
+    h += `<div class="wblock"><div class="wname"><span>${c}</span><span class="agg">全体 ${r.ok}/${r.tot}・${aggPct}%</span></div>`;
+    // 近い距離→遠い距離の順
+    const buckets = Object.keys(r.buckets).map(Number).sort((a,b)=>a-b);
+    buckets.forEach(b => {
+      const cell = r.buckets[b];
+      const pct = Math.round(cell.ok / cell.tot * 100);
+      const cls = wrateClass(pct);
+      const few = cell.tot <= 2 ? '<span class="wfew">参考</span>' : '';
+      h += `<div class="yd-row">
+        <div class="yd-label">${b}Y</div>
+        <div class="yd-bar"><div class="yd-fill ${cls}" style="width:${Math.max(pct,16)}%">${pct}%</div></div>
+        <div class="yd-cnt">${cell.ok}/${cell.tot}${few}</div>
+      </div>`;
+    });
+    h += `</div>`;
+  });
+  h += `<div class="wlegend"><span class="wsw hi"></span>70%以上　<span class="wsw mid"></span>40〜69%　<span class="wsw lo"></span>40%未満<br>「成功」＝🏁グリーンオン または 自己評価A・B　/　右＝成功数/試行数</div>`;
+  h += `</div>`;
+  return h;
+}
+
 function renderHomeStats() {
   const rs = getStatRounds();
   const p = getHomePeriod();
@@ -2141,6 +2233,8 @@ function renderHomeAnalysis(rs, allShots) {
         </div>`;
       });
     }
+    // ウェッジ距離別成功率
+    body += renderWedgeCard(allShots);
     // ミスランキングTOP5
     const missCount = {};
     allShots.forEach(s => {
@@ -3500,6 +3594,8 @@ function renderAnalysis() {
     });
     html += '</div>';
   }
+  // ウェッジ距離別成功率
+  html += renderWedgeCard(all);
   // 球筋（DR）
   if(shapeArr.length) {
     html += '<div class="analysis-card"><h4>📐 ドライバー球筋</h4>';
