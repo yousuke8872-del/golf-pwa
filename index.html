@@ -403,6 +403,29 @@ input[type=date],input[type=time]{color-scheme:light}
 /* ホール設定ボタン縦並び（既存.dual-actionに加えて） */
 .dual-action.vertical{flex-direction:column;gap:10px}
 .dual-action.vertical .btn{flex:none;width:100%}
+/* ===== v15 後入れ（スコア一括入力・ラウンド追加） ===== */
+.bf-banner{background:#FFF7E6;border:1px solid #F1D7A6;color:#7A5000;border-radius:var(--rs);padding:10px 12px;font-size:12px;line-height:1.6;margin-bottom:12px}
+.bf-banner b{color:#5C3C00}
+.q-wrap{background:var(--surf);border:.5px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.q-head,.q-row{display:grid;grid-template-columns:34px 40px repeat(5,minmax(0,1fr));gap:4px;align-items:center;padding:6px 8px}
+.q-head{background:var(--bg);font-size:10px;font-weight:700;color:var(--mt);text-align:center;line-height:1.2}
+.q-row{border-top:.5px solid var(--bd)}
+.q-row.done{background:#F4FAF7}
+.q-sec{background:var(--gl);font-size:11px;font-weight:800;color:var(--gd);padding:6px 12px;border-top:.5px solid var(--bd);display:flex;justify-content:space-between}
+.q-h{font-size:14px;font-weight:800;text-align:center;line-height:1.05}
+.q-h small{display:block;font-size:9px;color:var(--sub);font-weight:500}
+.q-par{width:100%;padding:7px 0;border:1px solid var(--bd);border-radius:6px;background:var(--surf);font-size:12px;font-weight:700;color:var(--tx);font-family:inherit}
+.q-par:active{background:var(--gl)}
+.q-in{width:100% !important;margin:0 !important;padding:7px 0 !important;text-align:center;font-size:16px !important;border-radius:6px !important}
+.q-in.sc{font-weight:800}
+.q-in:disabled{background:#f0efea;color:var(--mt)}
+.q-tot{display:grid;grid-template-columns:repeat(5,1fr);padding:12px 6px;text-align:center;font-size:11px;color:var(--mt)}
+.q-tot b{display:block;font-size:20px;color:var(--tx);font-weight:800;line-height:1.2}
+.q-help{font-size:11px;color:var(--mt);line-height:1.6;margin-bottom:10px}
+.bf-opt{border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer;background:var(--surf)}
+.bf-opt:active{background:var(--gl)}
+.bf-opt .t{font-size:15px;font-weight:700;margin-bottom:3px}
+.bf-opt .d{font-size:12px;color:var(--mt);line-height:1.5}
 </style>
 </head>
 <body>
@@ -415,6 +438,7 @@ input[type=date],input[type=time]{color-scheme:light}
       <div class="hero-title">ゴルフ記録</div>
       <div class="hero-sub">SHOT ANALYTICS</div>
       <button class="hero-btn-p" onclick="go('s-new-round')">＋ 新しいラウンドを開始</button>
+      <button class="hero-btn-g" onclick="openBackfillMenu()">📝 過去のラウンドを後入れ</button>
       <button class="hero-btn-g" onclick="go('s-settings')">⚙ 設定（クラブ・プレーヤー）</button>
     </div>
     <div id="home-hist"></div>
@@ -460,6 +484,8 @@ input[type=date],input[type=time]{color-scheme:light}
       <input type="file" id="import-file-inp" accept=".json,application/json,text/plain" style="display:none" onchange="importDataFromFile(this)">
       <button class="btn btn-g" onclick="document.getElementById('import-file-inp').click()" style="margin-bottom:6px">📥 ファイルから復元</button>
       <button class="btn btn-g btn-s" onclick="openImportTextDialog()">📝 テキストから復元</button>
+      <div style="font-size:11px;font-weight:700;color:var(--mt);margin:14px 0 6px;letter-spacing:.5px">▼ ラウンドの追加（今のデータは消えません）</div>
+      <button class="btn btn-g btn-s" onclick="openAppendDialog()" style="width:100%">➕ ラウンドデータを追加（後入れ用）</button>
     </div>
   </div>
 </div>
@@ -467,9 +493,10 @@ input[type=date],input[type=time]{color-scheme:light}
 <div id="s-new-round" class="screen">
   <div class="hdr">
     <button class="back-btn" onclick="back('s-home')">← 戻る</button>
-    <h1>ラウンド開始</h1>
+    <h1 id="nr-ttl">ラウンド開始</h1>
   </div>
   <div class="body">
+    <div class="bf-banner" id="r-bf-banner" style="display:none"><b>📝 後入れモード</b><br>コース・<b>プレー日</b>・天気・同伴者を入れて進むと、18ホールのスコアを一覧でまとめて入力できます。</div>
     <div class="card">
       <div class="ctit">コース選択（福岡県）</div>
       <select id="r-course-sel" onchange="onCourseChange()">
@@ -528,7 +555,7 @@ input[type=date],input[type=time]{color-scheme:light}
       </div>
     </div>
 
-    <button class="btn btn-p" onclick="startRound()">ラウンド開始 →</button>
+    <button class="btn btn-p" id="r-start-btn" onclick="startRound()">ラウンド開始 →</button>
   </div>
 </div>
 
@@ -860,6 +887,18 @@ input[type=date],input[type=time]{color-scheme:light}
       <div id="putt-details-list"></div>
     </div>
     <button class="btn btn-p" onclick="saveResult()">このホールを保存</button>
+  </div>
+</div>
+
+<div id="s-quick" class="screen">
+  <div class="hdr">
+    <button class="back-btn" onclick="quickBack()">← 戻る</button>
+    <h1>スコア一括入力</h1>
+  </div>
+  <div class="body" id="quick-body"></div>
+  <div class="bot-bar">
+    <button class="btn btn-g" style="flex:1" onclick="quickBack()">ホール一覧</button>
+    <button class="btn btn-p" style="flex:1" onclick="quickToSummary()">結果を見る →</button>
   </div>
 </div>
 
@@ -1622,7 +1661,8 @@ function back(id) {
   onScreen(id);
 }
 function onScreen(id) {
-  if(id==='s-home') renderHome();
+  if(id==='s-home') { D._backfill = false; renderHome(); }
+  if(id==='s-quick') renderQuick();
   if(id==='s-holes') renderHoles();
   if(id==='s-shots') renderShots();
   if(id==='s-result') initResultScreen();
@@ -1729,6 +1769,15 @@ function initNewRound() {
   const mm = String(today.getMonth()+1).padStart(2,'0');
   const dd = String(today.getDate()).padStart(2,'0');
   $('r-date').value = `${yyyy}-${mm}-${dd}`;
+  // v15 後入れモード：既定日を前日にして案内を表示
+  const bf = !!D._backfill;
+  $('r-bf-banner').style.display = bf ? 'block' : 'none';
+  $('nr-ttl').textContent = bf ? '後入れラウンド' : 'ラウンド開始';
+  $('r-start-btn').textContent = bf ? 'スコア入力へ →' : 'ラウンド開始 →';
+  if(bf) {
+    const y = new Date(today.getTime() - 86400000);
+    $('r-date').value = `${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
+  }
 
   D._selectedPlayers = [];
   $('sel-players').innerHTML = '';
@@ -1904,6 +1953,14 @@ function startRound() {
     weather: D.selWx, players: [...(D._selectedPlayers||[])],
     holes
   };
+  if(D._backfill) {
+    r.backfill = true;
+    D.ri = insertRoundByDate(r);
+    D._backfill = false;
+    sv();
+    go('s-quick');
+    return;
+  }
   D.rounds.push(r);
   D.ri = D.rounds.length-1;
   sv();
@@ -2454,7 +2511,7 @@ function renderHoles() {
       </div>
       <div class="${dc}" style="font-size:13px;font-weight:800;text-align:right;line-height:1.2;flex-shrink:0;min-width:80px">${ds}</div>
     </div>`;
-  }).join('');
+  }).join('') + `<div class="lrow" onclick="openQuick()" style="justify-content:center;color:var(--gd);font-size:14px;font-weight:700">📝 スコアを一覧でまとめて入力・修正</div>`;
 }
 
 function openHole(i) {
@@ -3284,13 +3341,7 @@ function renderSummary() {
 
   // バンカー/OB/ペナルティの集計
   let bunkers = 0, obs = 0, pens = 0;
-  r.holes.forEach(h => {
-    h.shots.forEach(s => {
-      if(s.land === 'バンカー') bunkers++;
-      if(s.land === 'OB') obs++;
-      if(s.land === '池ポチャ' || s.land === 'ペナルティ') pens++;
-    });
-  });
+  r.holes.forEach(h => { const t = holeTally(h); bunkers += t.bunker; obs += t.ob; pens += t.pen; });
 
   // 表分割：18ホールならIN/OUT、9ならそれ単独、それ以外なら全部1行
   const holes = r.holes;
@@ -3481,6 +3532,8 @@ function renderScoreCard() {
   cardHtml += `<tr><td class="row-label">バンカー</td>`;
   let bA=0,bB=0,bT=0;
   function countLand(h, land) {
+    if(land === 'バンカー') return holeTally(h).bunker;
+    if(land === 'OB') return holeTally(h).ob;
     return h.shots.filter(s => s.land === land).length;
   }
   if(numHoles === 18) {
@@ -3509,7 +3562,7 @@ function renderScoreCard() {
   // ペナルティ行
   cardHtml += `<tr><td class="row-label">ペナルティ</td>`;
   function pencount(h) {
-    return h.shots.filter(s => s.land === '池ポチャ' || s.land === 'ペナルティ').length;
+    return holeTally(h).pen;
   }
   let peA=0,peB=0,peT=0;
   if(numHoles === 18) {
@@ -3713,11 +3766,7 @@ function buildCopy() {
   t+=`スコア：${tot}（対Par${tot-par>=0?'+':''}${tot-par}） / パット：${totPutt}\n`;
   // バンカー/OB/ペナルティ集計
   let bunkers = 0, obs = 0, pens = 0;
-  r.holes.forEach(h => h.shots.forEach(s => {
-    if(s.land === 'バンカー') bunkers++;
-    if(s.land === 'OB') obs++;
-    if(s.land === '池ポチャ' || s.land === 'ペナルティ') pens++;
-  }));
+  r.holes.forEach(h => { const t = holeTally(h); bunkers += t.bunker; obs += t.ob; pens += t.pen; });
   t+=`バンカー:${bunkers} / OB:${obs} / ペナルティ:${pens}\n`;
   if(r.notes) t+=`\n【ラウンドメモ】\n${r.notes}\n`;
   t+=`\n【各ホール詳細】\n`;
@@ -3743,6 +3792,7 @@ function buildCopy() {
     });
     if(h.result){
       t+=`  結果：${h.result.on||0}オン${h.result.putt||0}パット${h.result.penalty?' + 罰打'+h.result.penalty:''} → ${h.result.score||0}打${h.result.ok?' (OK)':''}`;
+      if(h.result.q && !h.shots.length) t+=` 〔後入れ OB:${h.result.q.ob||0} 池/ペナ:${h.result.q.pen||0} バンカー:${h.result.q.bunker||0}〕`;
       if(h.result.puttDetails && h.result.puttDetails.length) {
         const pd = h.result.puttDetails.map((p,j) => p.d||p.r||p.m ? `${j+1}P:${p.d?p.d+'歩':''}${p.r?' '+p.r:''}${p.m?'('+p.m+')':''}` : '').filter(Boolean).join(' / ');
         if(pd) t+=` / ${pd}`;
@@ -3893,7 +3943,7 @@ function showExportTextFallback(json) {
     <div style="font-weight:700;font-size:15px;margin-bottom:8px">バックアップテキスト</div>
     <div style="font-size:12px;color:var(--mt);margin-bottom:10px;line-height:1.5">下のテキストを長押し→「すべてを選択」→「コピー」してから、メモアプリに貼り付けてください</div>
     <textarea readonly id="_bk_ta" style="width:100%;height:200px;font-size:10px;font-family:monospace;padding:8px;border:1px solid var(--bd);border-radius:8px;background:#FAFAFA"></textarea>
-    <button class="btn btn-p" style="margin-top:10px" onclick="(function(){var ov=document.querySelector('.penalty-overlay'); if(ov) ov.remove();})()">閉じる</button>
+    <button class="btn btn-p" style="margin-top:10px" onclick="this.closest('.penalty-overlay').remove()">閉じる</button>
   </div>`;
   document.body.appendChild(overlay);
   const ta = overlay.querySelector('#_bk_ta');
@@ -3927,8 +3977,8 @@ function openImportTextDialog() {
     <div style="font-size:12px;color:var(--mt);margin-bottom:10px;line-height:1.5">バックアップしたJSONテキストを貼り付けてください</div>
     <textarea id="_imp_ta" placeholder='{"version":"v7","rounds":[...]}' style="width:100%;height:160px;font-size:10px;font-family:monospace;padding:8px;border:1px solid var(--bd);border-radius:8px"></textarea>
     <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="btn btn-g" style="flex:1" onclick="(function(){var ov=document.querySelector('.penalty-overlay'); if(ov) ov.remove();})()">キャンセル</button>
-      <button class="btn btn-p" style="flex:1" onclick="(function(){var ta=document.getElementById('_imp_ta'); var t=ta?ta.value:''; var ov=document.querySelector('.penalty-overlay'); if(ov) ov.remove(); processImport(t);})()">読み込む</button>
+      <button class="btn btn-g" style="flex:1" onclick="this.closest('.penalty-overlay').remove()">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" onclick="var ov=this.closest('.penalty-overlay'); var ta=ov.querySelector('#_imp_ta'); var t=ta?ta.value:''; ov.remove(); processImport(t);">読み込む</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -3974,6 +4024,332 @@ function processImport(text) {
   } catch(err) {
     alert('復元処理でエラーが発生しました：' + err.message);
   }
+}
+
+
+// ===================================================================
+// v15 後入れ（過去ラウンドのスコア一括入力・ラウンド追加読み込み）
+// ===================================================================
+// ホールのバンカー/OB/ペナ回数：ショット記録があればそこから、無ければ一括入力の値
+function holeTally(h) {
+  const t = { bunker: 0, ob: 0, pen: 0 };
+  if(!h) return t;
+  if(h.shots && h.shots.length) {
+    h.shots.forEach(s => {
+      if(s.land === 'バンカー') t.bunker++;
+      if(s.land === 'OB') t.ob++;
+      if(s.land === '池ポチャ' || s.land === 'ペナルティ') t.pen++;
+    });
+  } else if(h.result && h.result.q) {
+    t.bunker = parseInt(h.result.q.bunker)||0;
+    t.ob = parseInt(h.result.q.ob)||0;
+    t.pen = parseInt(h.result.q.pen)||0;
+  }
+  return t;
+}
+
+function _timeMin(s) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(s||'');
+  return m ? parseInt(m[1])*60 + parseInt(m[2]) : 0;
+}
+// 日付（＋開始時刻）順の位置に挿入して、その index を返す
+function insertRoundByDate(r) {
+  const t = roundTime(r);
+  if(isNaN(t)) { D.rounds.push(r); return D.rounds.length-1; }
+  const key = t + _timeMin(r.time)*60000;
+  let idx = D.rounds.length;
+  for(let j = D.rounds.length-1; j >= 0; j--) {
+    const tj = roundTime(D.rounds[j]);
+    if(isNaN(tj)) break;
+    if(tj + _timeMin(D.rounds[j].time)*60000 > key) idx = j; else break;
+  }
+  D.rounds.splice(idx, 0, r);
+  return idx;
+}
+
+function _closeOverlay(id) { const ov = $(id); if(ov) ov.remove(); }
+
+// ホームの「過去のラウンドを後入れ」
+function openBackfillMenu() {
+  _closeOverlay('bf-overlay');
+  const ov = document.createElement('div');
+  ov.className = 'penalty-overlay show';
+  ov.id = 'bf-overlay';
+  ov.onclick = e => { if(e.target === ov) ov.remove(); };
+  ov.innerHTML = `<div class="penalty-sheet">
+    <h3>📝 過去のラウンドを後入れ</h3>
+    <div class="pdesc">アプリを使えなかったラウンドを、あとから記録します。</div>
+    <div class="bf-opt" onclick="_closeOverlay('bf-overlay'); D._backfill = true; go('s-new-round');">
+      <div class="t">① スコアカードで入力する</div>
+      <div class="d">コースとプレー日を選び、18ホールの打数・パット・OB・池・バンカーを一覧でまとめて入力。ショットの細かい記録は不要です。</div>
+    </div>
+    <div class="bf-opt" onclick="_closeOverlay('bf-overlay'); openAppendDialog();">
+      <div class="t">② ラウンドデータを貼り付けて追加</div>
+      <div class="d">Claude などで作ったラウンドデータ（JSON）を、<b>今のデータを消さずに</b>追加します。ショット記録付きのデータも読み込めます。</div>
+    </div>
+    <button class="btn btn-g" onclick="_closeOverlay('bf-overlay')">キャンセル</button>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+// ---------- スコア一括入力 ----------
+function openQuick() { if(rnd()) go('s-quick'); }
+function quickBack() { back('s-holes'); }
+function quickToSummary() { go('s-summary'); }
+
+function renderQuick() {
+  const r = rnd(); if(!r) return;
+  const body = $('quick-body');
+  const wxIcon = {晴:'☀️',曇:'☁️',雨:'🌧',雪:'❄️'}[r.weather]||'';
+  let html = '';
+  html += `<div class="card" style="padding:12px 14px">
+    <div style="font-weight:700;font-size:15px">${r.course}</div>
+    <div style="font-size:12px;color:var(--mt);margin-top:2px">${r.half?r.half+' / ':''}${r.date||'日付なし'}${r.time?' '+r.time:''} ${wxIcon}${r.players&&r.players.length?' / '+r.players.join('・'):''}</div>
+  </div>`;
+  html += `<div class="q-help">打数を入れたホールが「完了」になります（パット等は分かる範囲でOK）。Parはボタンを押すと 3→4→5 と切り替わります。<br>OB・池/ペナは<b>回数</b>を入力（1回＝1打罰としてオン数を計算。プレイング4は2）。<br>入力はその場で自動保存されます。ショットを記録したホールのOB等はショット記録から自動で数えます。</div>`;
+  html += `<div class="q-wrap"><div class="q-head"><div>H</div><div>Par</div><div>打数</div><div>パット</div><div>OB</div><div>池<br>ペナ</div><div>バン<br>カー</div></div>`;
+  let prevLabel = null;
+  r.holes.forEach((h, i) => {
+    const label = h.courseLabel || '';
+    if(label && label !== prevLabel) {
+      html += `<div class="q-sec"><span>${label}</span><span id="q-sub-${i}"></span></div>`;
+    }
+    prevLabel = label;
+    const res = h.result;
+    const hasShots = h.shots && h.shots.length > 0;
+    const t = holeTally(h);
+    const v = x => (x || x === 0) && x !== '' ? x : '';
+    const orig = h.origNum && h.origNum !== h.num ? `<small>${h.origNum}番</small>` : '';
+    html += `<div class="q-row${res?' done':''}" id="q-row-${i}">
+      <div class="q-h">${h.num}${orig}</div>
+      <button class="q-par" id="q-par-${i}" onclick="cycleQuickPar(${i})">${h.par}</button>
+      <input type="number" inputmode="numeric" class="q-in sc" id="q-score-${i}" value="${res?v(res.score):''}" oninput="onQuickInput(${i})">
+      <input type="number" inputmode="numeric" class="q-in" id="q-putt-${i}" value="${res?v(res.putt):''}" oninput="onQuickInput(${i})">
+      <input type="number" inputmode="numeric" class="q-in" id="q-ob-${i}" value="${hasShots?t.ob:(res&&res.q?v(res.q.ob):'')}" ${hasShots?'disabled':''} oninput="onQuickInput(${i})">
+      <input type="number" inputmode="numeric" class="q-in" id="q-pen-${i}" value="${hasShots?t.pen:(res&&res.q?v(res.q.pen):'')}" ${hasShots?'disabled':''} oninput="onQuickInput(${i})">
+      <input type="number" inputmode="numeric" class="q-in" id="q-bk-${i}" value="${hasShots?t.bunker:(res&&res.q?v(res.q.bunker):'')}" ${hasShots?'disabled':''} oninput="onQuickInput(${i})">
+    </div>`;
+  });
+  html += `<div class="q-sec" style="background:var(--bg);color:var(--mt)"><span>合計</span><span id="q-done"></span></div>`;
+  html += `<div class="q-tot" id="q-tot"></div></div>`;
+  html += `<div class="q-help">ショットの詳細（番手・方向・ミスなど）も残したい場合は、ホール一覧から各ホールを開いて追加できます。</div>`;
+  body.innerHTML = html;
+  updateQuickTotals();
+}
+
+function _qVal(id) {
+  const el = $(id); if(!el) return null;
+  const s = String(el.value).trim();
+  if(s === '') return null;
+  const n = parseInt(s);
+  return isNaN(n) ? null : Math.max(0, n);
+}
+
+function quickApply(i) {
+  const r = rnd(); if(!r) return;
+  const h = r.holes[i]; if(!h) return;
+  const score = _qVal(`q-score-${i}`);
+  const hasShots = h.shots && h.shots.length > 0;
+  if(!score) {
+    h.result = null;
+  } else {
+    const putt = _qVal(`q-putt-${i}`) || 0;
+    const ob = _qVal(`q-ob-${i}`) || 0;
+    const pen = _qVal(`q-pen-${i}`) || 0;
+    const bunker = _qVal(`q-bk-${i}`) || 0;
+    const penalty = hasShots ? totalPenaltyStrokes(h) : ob + pen;
+    const prev = h.result || {};
+    const res = {
+      on: Math.max(0, score - putt - penalty),
+      putt, score,
+      ok: !!prev.ok,
+      puttDetails: Array.isArray(prev.puttDetails) ? prev.puttDetails.slice(0, putt) : [],
+      penalty
+    };
+    if(!hasShots) res.q = { ob, pen, bunker };
+    h.result = res;
+  }
+  const row = $(`q-row-${i}`);
+  if(row) row.classList.toggle('done', !!h.result);
+}
+
+function onQuickInput(i) {
+  quickApply(i);
+  sv();
+  updateQuickTotals();
+}
+
+function cycleQuickPar(i) {
+  const h = rnd().holes[i]; if(!h) return;
+  h.par = h.par === 3 ? 4 : h.par === 4 ? 5 : 3;
+  $(`q-par-${i}`).textContent = h.par;
+  sv();
+  updateQuickTotals();
+}
+
+function updateQuickTotals() {
+  const r = rnd(); if(!r) return;
+  let sc = 0, pt = 0, ob = 0, pen = 0, bk = 0, done = 0, parDone = 0;
+  r.holes.forEach(h => {
+    if(!h.result) return;
+    done++;
+    parDone += h.par;
+    sc += h.result.score || 0;
+    pt += h.result.putt || 0;
+    const t = holeTally(h);
+    ob += t.ob; pen += t.pen; bk += t.bunker;
+  });
+  // コース（前半/後半）ごとの小計
+  let start = 0;
+  r.holes.forEach((h, i) => {
+    const label = h.courseLabel || '';
+    const next = r.holes[i+1];
+    if(!next || (next.courseLabel || '') !== label) {
+      const seg = r.holes.slice(start, i+1);
+      const el = $(`q-sub-${start}`);
+      if(el) {
+        const segDone = seg.filter(x => x.result);
+        const segSc = segDone.reduce((s,x) => s + x.result.score, 0);
+        const segPar = segDone.reduce((s,x) => s + x.par, 0);
+        const d = segSc - segPar;
+        el.textContent = segDone.length ? `${segSc}（${d>0?'+'+d:d===0?'E':d}）` : '';
+      }
+      start = i+1;
+    }
+  });
+  const diff = sc - parDone;
+  $('q-done').textContent = `${done}/${r.holes.length}H 入力済`;
+  $('q-tot').innerHTML = `
+    <div><b>${done?sc:'−'}</b>スコア${done?`<br>${diff>0?'+'+diff:diff===0?'E':diff}`:''}</div>
+    <div><b>${done?pt:'−'}</b>パット</div>
+    <div><b>${ob}</b>OB</div>
+    <div><b>${pen}</b>池/ペナ</div>
+    <div><b>${bk}</b>バンカー</div>`;
+}
+
+// ---------- ラウンドデータの追加（既存データは消さない） ----------
+function openAppendDialog() {
+  _closeOverlay('append-overlay');
+  const ov = document.createElement('div');
+  ov.className = 'penalty-overlay show';
+  ov.id = 'append-overlay';
+  ov.style.alignItems = 'center';
+  ov.innerHTML = `<div class="penalty-sheet" style="max-width:400px;border-radius:14px;max-height:85vh">
+    <div style="font-weight:700;font-size:15px;margin-bottom:6px">➕ ラウンドデータを追加</div>
+    <div style="font-size:12px;color:var(--mt);margin-bottom:10px;line-height:1.6">ラウンドデータ（JSON）を貼り付けるか、ファイルを選んでください。<b>今のデータは消えません</b>（同じ日付・コースがある場合だけ、置き換えるか確認します）。</div>
+    <textarea id="_app_ta" placeholder='{"rounds":[{"course":"…","date":"2026/11/05","holes":[…]}]}' style="width:100%;height:150px;font-size:10px;font-family:monospace;padding:8px;border:1px solid var(--bd);border-radius:8px"></textarea>
+    <input type="file" id="_app_file" accept=".json,application/json,text/plain" style="display:none" onchange="appendFromFile(this)">
+    <button class="btn btn-g btn-s" style="width:100%;margin-top:8px" onclick="$('_app_file').click()">📁 ファイルから選ぶ</button>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-g" style="flex:1" onclick="_closeOverlay('append-overlay')">キャンセル</button>
+      <button class="btn btn-p" style="flex:1" onclick="var t=$('_app_ta').value; if(processAppendImport(t)) _closeOverlay('append-overlay');">追加する</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function appendFromFile(input) {
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { if(processAppendImport(e.target.result)) _closeOverlay('append-overlay'); input.value = ''; };
+  reader.onerror = () => { alert('ファイルの読み込みに失敗しました'); input.value = ''; };
+  reader.readAsText(file);
+}
+
+function _normDate(d) {
+  if(!d) return '';
+  const m = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/.exec(String(d).trim());
+  return m ? `${m[1]}/${m[2].padStart(2,'0')}/${m[3].padStart(2,'0')}` : String(d);
+}
+
+function normalizeRound(r) {
+  if(!r || typeof r !== 'object' || !Array.isArray(r.holes) || !r.holes.length) return null;
+  const holes = r.holes.map((h, i) => {
+    h = h || {};
+    const shots = Array.isArray(h.shots) ? h.shots.map(s => Object.assign({
+      club:'', dir:'', eval:'', shape:'', shapes:[], traj:[], misses:[], land:'', lie:'', remain:0, dist:0, memo:'', penalty:null
+    }, s || {})) : [];
+    shots.forEach(s => {
+      s.remain = parseInt(s.remain)||0;
+      s.dist = parseInt(s.dist)||0;
+      if(!Array.isArray(s.misses)) s.misses = s.misses ? [String(s.misses)] : [];
+      if(!Array.isArray(s.traj)) s.traj = s.traj ? [String(s.traj)] : [];
+      if(!Array.isArray(s.shapes)) s.shapes = [];
+    });
+    let result = null;
+    const hr = h.result;
+    if(hr && typeof hr === 'object' && (parseInt(hr.score)||0) > 0) {
+      const score = parseInt(hr.score)||0;
+      const putt = parseInt(hr.putt)||0;
+      const shotPen = shots.reduce((s,x) => s + ((x.penalty && x.penalty.strokes) || 0), 0);
+      const q = hr.q && !shots.length ? { ob: parseInt(hr.q.ob)||0, pen: parseInt(hr.q.pen)||0, bunker: parseInt(hr.q.bunker)||0 } : null;
+      const penalty = hr.penalty != null ? (parseInt(hr.penalty)||0) : shots.length ? shotPen : q ? q.ob + q.pen : 0;
+      result = Object.assign({}, hr, {
+        score, putt, penalty,
+        on: hr.on != null ? (parseInt(hr.on)||0) : Math.max(0, score - putt - penalty),
+        ok: !!hr.ok,
+        puttDetails: Array.isArray(hr.puttDetails) ? hr.puttDetails : []
+      });
+      if(q) result.q = q; else delete result.q;
+    }
+    return Object.assign({}, h, {
+      num: parseInt(h.num)||i+1, par: parseInt(h.par)||4, dist: parseInt(h.dist)||0,
+      wind: h.wind || '無風', shots, result
+    });
+  });
+  return Object.assign({}, r, {
+    course: r.course || 'コース', half: r.half || '', date: _normDate(r.date), time: r.time || '',
+    weather: r.weather || '晴', players: Array.isArray(r.players) ? r.players : [], holes
+  });
+}
+
+function processAppendImport(text) {
+  if(!text || !text.trim()) { alert('テキストが空です'); return false; }
+  let data;
+  try { data = JSON.parse(text.trim()); }
+  catch(err) { alert('読み込み失敗：JSONの形式が正しくありません\n\n' + err.message); return false; }
+  const list = Array.isArray(data) ? data
+    : data && Array.isArray(data.rounds) ? data.rounds
+    : data && Array.isArray(data.holes) ? [data] : null;
+  if(!list || !list.length) { alert('ラウンドデータが見つかりません（rounds または holes がありません）'); return false; }
+  const clean = [];
+  for(const r of list) {
+    const n = normalizeRound(r);
+    if(!n) { alert('ホールの情報が無いラウンドが含まれているため、読み込めません'); return false; }
+    clean.push(n);
+  }
+  const sameAs = r => D.rounds.findIndex(x => (x.date||'') === r.date && x.course === r.course);
+  let msg = '【ラウンドの追加】\n\n今のデータは消えずに、次のラウンドが追加されます。\n\n';
+  let dupCnt = 0;
+  clean.forEach(r => {
+    const done = r.holes.filter(h => h.result);
+    const tot = done.reduce((s,h) => s + h.result.score, 0);
+    const shotCnt = r.holes.reduce((s,h) => s + h.shots.length, 0);
+    msg += `・${r.date||'日付なし'} ${r.course}\n　${done.length}H入力 / ${tot||'−'}打${shotCnt?' / ショット'+shotCnt+'件':''}\n`;
+    if(sameAs(r) !== -1) dupCnt++;
+  });
+  if(dupCnt) msg += `\n※同じ日付・コースのラウンドが${dupCnt}件あります（次に確認します）\n`;
+  msg += '\n追加しますか？';
+  if(!confirm(msg)) return false;
+  let replace = false;
+  if(dupCnt) {
+    replace = confirm(`同じ日付・コースのラウンドが既に${dupCnt}件あります。\n\n［OK］既存のラウンドを置き換える\n　（元に戻せません。心配なら先にバックアップを）\n［キャンセル］置き換えずに、別のラウンドとして追加`);
+  }
+  try {
+    clean.forEach(r => {
+      if(replace) { const di = sameAs(r); if(di !== -1) D.rounds.splice(di, 1); }
+      insertRoundByDate(r);
+    });
+    D.ri = -1; D.hi = 0; D.editing = null;
+    sv();
+  } catch(err) {
+    alert('追加処理でエラーが発生しました：' + err.message);
+    return false;
+  }
+  alert(`✅ ${clean.length}件のラウンドを${replace?'置き換え・':''}追加しました`);
+  back('s-home');
+  return true;
 }
 
 function updateLastExportInfo() {
