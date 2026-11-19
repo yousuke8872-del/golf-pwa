@@ -859,6 +859,7 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
   <div class="body">
     <div class="card">
+      <div id="pen-pending" class="warn" style="display:none;margin-bottom:10px"></div>
       <div class="ctit">スコア（オン数・パット数を選ぶと自動計算）</div>
       <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:12px;color:var(--mt)">記録ショット: <strong id="r-rec-shots">0</strong>打 + 罰打 <strong id="r-pen">0</strong></div>
@@ -895,7 +896,8 @@ input[type=date],input[type=time]{color-scheme:light}
       </div>
       <label style="margin-top:10px">合計打数（自動・修正したい場合のみ手入力）</label>
       <input type="number" id="h-score" placeholder="自動計算されます" oninput="chkScore()">
-      <div id="score-warn" class="warn" style="display:none">※ 自動計算と異なる値になっています（残します）</div>
+      <div id="score-warn" class="warn" style="display:none"><span id="score-warn-txt"></span>
+        <button class="btn btn-g" style="margin-top:6px;font-size:13px;padding:8px" onclick="scoreToAuto()">計算に戻す</button></div>
     </div>
     <div class="card" id="putt-detail-card">
       <div class="ctit">パット詳細（任意）</div>
@@ -1638,7 +1640,7 @@ const FUKUOKA = [
 // ========== STATE ==========
 const KEY = 'golf3test';
 const IS_TEST = true;
-const APP_VERSION = 'v16';
+const APP_VERSION = 'v17';
 const TRASH_DAYS = 30;
 let D = {
   rounds: [],
@@ -1655,9 +1657,47 @@ function loadData() {
     if(saved.settings) D.settings = Object.assign(D.settings, saved.settings);
     if(Array.isArray(saved.trash)) D.trash = saved.trash;
   } catch(e) {}
+  try { normalizeScores(); } catch(e) {}
   purgeTrash();
 }
-function sv() { localStorage.setItem(KEY, JSON.stringify({ rounds: D.rounds, settings: D.settings, trash: D.trash })); }
+// v17：打数は、手で直したホール（result.scoreManual）だけ手の数字を使い、ほかは「オン数＋パット数＋罰打」で計算し直す
+function holeShotCount(h) { return (h && Array.isArray(h.shots)) ? h.shots.length : 0; }
+function holePenaltyStrokes(h) {
+  if(!h) return 0;
+  if(holeShotCount(h)) return totalPenaltyStrokes(h);
+  return (h.result && parseInt(h.result.penalty)) || 0;  // 後入れ（1打ごとの記録なし）は保存した罰打
+}
+function scoreAutoOf(h) {
+  const r = h && h.result; if(!r) return 0;
+  return (r.on||0) + (r.putt||0) + holePenaltyStrokes(h);
+}
+// 手で入れた打数が、計算と違うホール（1打ごとの記録があるホールだけ）
+function scoreMismatch(h) {
+  const r = h && h.result;
+  if(!r || !r.score || !holeShotCount(h) || !r.scoreManual) return false;
+  return r.score !== scoreAutoOf(h);
+}
+// 処理（罰打）を決めていないOB・池・ペナルティの打
+function pendingPenaltyIdx(h) {
+  if(!h || !Array.isArray(h.shots)) return [];
+  const out = [];
+  h.shots.forEach((s,i) => { if(s && ['OB','池ポチャ','ペナルティ'].includes(s.land) && !s.penalty) out.push(i); });
+  return out;
+}
+function normalizeScores() {
+  (D.rounds||[]).forEach(rd => (rd && rd.holes || []).forEach(h => {
+    const r = h && h.result; if(!r || typeof r !== 'object') return;
+    const hasShots = holeShotCount(h) > 0;
+    // これまでの記録（印なし）：計算と同じなら自動、違えば手で直したものとみなす。後入れは手の数字のまま
+    if(r.scoreManual === undefined) r.scoreManual = hasShots ? (!!r.score && r.score !== scoreAutoOf(h)) : true;
+    if(hasShots && !r.scoreManual) {
+      r.penalty = totalPenaltyStrokes(h);
+      const a = scoreAutoOf(h);
+      if(a > 0) r.score = a;
+    }
+  }));
+}
+function sv() { normalizeScores(); localStorage.setItem(KEY, JSON.stringify({ rounds: D.rounds, settings: D.settings, trash: D.trash })); }
 const $ = id => document.getElementById(id);
 const rnd = () => D.rounds[D.ri];
 const hole = () => rnd().holes[D.hi];
@@ -2599,6 +2639,7 @@ function renderHoles() {
       <div style="flex:1">
         <div style="font-size:15px;font-weight:600">${h.num}H ${origNumLabel}<span style="font-weight:400;font-size:13px;color:var(--mt)">Par${h.par}${h.dist?' · '+h.dist+'Y':''}</span></div>
         <div style="font-size:12px;color:var(--mt)">${h.shots.length}ショット${d?' · '+h.result.score+'打 ('+h.result.on+'オン'+h.result.putt+'パット)':''}</div>
+        ${scoreMismatch(h)?`<div style="font-size:12px;color:var(--red);font-weight:700">⚠ 計算（${scoreAutoOf(h)}打）と違う</div>`:''}${pendingPenaltyIdx(h).length&&d?`<div style="font-size:12px;color:var(--red);font-weight:700">⚠ OB・池の処理が決まっていない</div>`:''}
       </div>
       <div class="${dc}" style="font-size:13px;font-weight:800;text-align:right;line-height:1.2;flex-shrink:0;min-width:80px">${ds}</div>
     </div>`;
@@ -3132,6 +3173,14 @@ function showPenaltyDialog(shot, shotIdx, nextAction) {
 }
 
 function applyPenalty(shotIdx, label, penalty) {
+  if(_pendingPenaltyAction === 'stay') {
+    const hh = hole();
+    if(hh && hh.shots[shotIdx]) { hh.shots[shotIdx].penalty = { type: label, strokes: penalty }; sv(); }
+    $('penalty-overlay').classList.remove('show');
+    _pendingPenaltyAction = 'back';
+    updateAutoTotal(); chkScore(); renderPendingPenalty();
+    return;
+  }
   const h = hole();
   if(!h || !h.shots[shotIdx]) { dismissPenalty(); return; }
   h.shots[shotIdx].penalty = { type: label, strokes: penalty };
@@ -3151,6 +3200,7 @@ function applyPenalty(shotIdx, label, penalty) {
 }
 function dismissPenalty() {
   $('penalty-overlay').classList.remove('show');
+  if(_pendingPenaltyAction === 'stay') { _pendingPenaltyAction = 'back'; return; }
   // 「あとで決める」を選んだ場合：保存はされている、次アクションも実行
   if(_pendingPenaltyAction === 'continue') {
     back('s-shots');
@@ -3204,7 +3254,7 @@ function onOnPuttOtherInput(which) {
 function updateAutoTotal() {
   const h = hole(); if(!h) return;
   const recordedShots = h.shots.length;
-  const penalty = totalPenaltyStrokes(h);
+  const penalty = holePenaltyStrokes(h);
   // 合計打数 = オン数 + パット数 + 罰打 (OKでも加算したまま=ユーザの記録した数値を尊重)
   const total = (_resultState.on||0) + (_resultState.putt||0) + penalty;
   $('r-rec-shots').textContent = recordedShots;
@@ -3217,7 +3267,24 @@ function updateAutoTotal() {
 function chkScore() {
   const auto = parseInt($('r-auto-total').textContent) || 0;
   const inp = parseInt($('h-score').value);
-  $('score-warn').style.display = (inp && auto && inp!==auto) ? 'block' : 'none';
+  const show = !!(inp && auto && inp!==auto);
+  $('score-warn').style.display = show ? 'block' : 'none';
+  if(show) $('score-warn-txt').textContent = `⚠ 計算（${auto}打）と違う打数（${inp}打）が手で入っています。保存すると${inp}打になります。`;
+}
+// v17：手で入れた打数を消して、計算に戻す
+function scoreToAuto() { $('h-score').value = ''; chkScore(); }
+// v17：処理を決めていないOB・池の知らせ
+function renderPendingPenalty() {
+  const box = $('pen-pending'); if(!box) return;
+  const h = hole(); const idx = pendingPenaltyIdx(h);
+  if(!idx.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = 'block';
+  box.innerHTML = `<div style="font-weight:700;margin-bottom:6px">⚠ 処理（罰打）を決めていない打があります</div>` +
+    idx.map(i => `<button class="btn btn-g" style="margin-top:6px;font-size:14px" onclick="resolvePendingPenalty(${i})">${i+1}打目の${h.shots[i].land}（${h.shots[i].club||'-'}）の処理を決める</button>`).join('');
+}
+function resolvePendingPenalty(i) {
+  const h = hole(); if(!h || !h.shots[i]) return;
+  showPenaltyDialog(h.shots[i], i, 'stay');
 }
 
 function renderPuttDetails() {
@@ -3293,9 +3360,12 @@ function initResultScreen() {
     $('r-putt-other').value = _resultState.putt;
   }
   $('r-ok').checked = !!_resultState.ok;
-  $('h-score').value = r.score || '';
+  // v17：手で直したホールだけ、前の打数を欄に入れる（ほかは空にして、計算を使う）
+  $('h-score').value = (r.scoreManual ? r.score : '') || '';
   $('score-warn').style.display = 'none';
   updateAutoTotal();
+  chkScore();
+  renderPendingPenalty();
   renderPuttDetails();
   $('result-ttl').textContent = `${h.num}H 結果入力 (Par${h.par})`;
 }
@@ -3313,11 +3383,12 @@ function saveResult() {
 
     const on = _resultState.on || 0;
     const putt = _resultState.putt || 0;
-    const penalty = totalPenaltyStrokes(h);
+    const penalty = holePenaltyStrokes(h);
     const autoScore = on + putt + penalty;
     const hScoreEl = $('h-score');
-    const inputScore = hScoreEl ? parseInt(hScoreEl.value) : 0;
-    const score = inputScore || autoScore;
+    const inputScore = hScoreEl ? (parseInt(hScoreEl.value) || 0) : 0;
+    const scoreManual = !!inputScore && inputScore !== autoScore;
+    const score = scoreManual ? inputScore : autoScore;
 
     // ★バリデーション：オン数もパット数も0なら保存しない（誤操作防止）
     if(on === 0 && putt === 0 && score === 0) {
@@ -3341,12 +3412,15 @@ function saveResult() {
     }
 
     const okEl = $('r-ok');
+    const prevQ = (h.result && h.result.q && typeof h.result.q === 'object') ? h.result.q : null;  // v17：後入れの回数を残す
     h.result = {
       on, putt, score,
       ok: okEl ? okEl.checked : false,
       puttDetails: details,
-      penalty: penalty
+      penalty: penalty,
+      scoreManual: scoreManual
     };
+    if(!holeShotCount(h) && prevQ) h.result.q = prevQ;
     sv();
 
     // _resultState クリア
