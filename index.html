@@ -22,12 +22,20 @@
 }
 html,body{height:100%;background:var(--bg);font-family:-apple-system,'Hiragino Sans',sans-serif;color:var(--tx);overflow:hidden;font-size:16px}
 #app{height:100dvh;display:flex;flex-direction:column;max-width:430px;margin:0 auto;overflow:hidden;position:relative}
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);will-change:transform;transition:transform .32s cubic-bezier(.4,0,.2,1);transform:translateX(100%);overflow:hidden}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);transform:translateX(100%);overflow:hidden}
 .screen.active{transform:translateX(0)}
 .screen.left{transform:translateX(-25%)}
 .hdr{background:var(--surf);border-bottom:.5px solid var(--bd);display:flex;align-items:center;gap:8px;flex-shrink:0;padding:12px 14px;padding-top:max(12px,var(--safe-top))}
 .hdr h1{font-size:17px;font-weight:700;flex:1;letter-spacing:-.3px}
 .back-btn{background:none;border:none;color:var(--g);font-size:15px;padding:6px 8px;cursor:pointer;font-family:inherit;font-weight:500;flex-shrink:0}
+.hdr-home{background:none;border:.5px solid var(--bd);border-radius:var(--rs);font-size:16px;line-height:1;padding:6px 8px;cursor:pointer;flex-shrink:0}
+.rc-more{background:none;border:.5px solid var(--bd);border-radius:var(--rs);color:var(--mt);font-size:18px;font-weight:700;line-height:1;width:36px;height:36px;flex-shrink:0;align-self:center;cursor:pointer;font-family:inherit}
+.menu-btn{width:100%;margin-bottom:8px;font-size:15px;padding:13px}
+.trash-row{display:flex;align-items:center;gap:6px;padding:10px 0;border-top:.5px solid var(--bd)}
+.trash-btn{padding:7px 9px;font-size:12px;width:auto;flex-shrink:0}
+#err-banner{position:fixed;left:8px;right:8px;top:max(8px,env(safe-area-inset-top));z-index:10000;background:#FCEBEB;border:1px solid #E24B4A;border-radius:12px;padding:12px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-width:414px;margin:0 auto}
+.err-btn{flex:1;font-size:12px;padding:9px 2px;white-space:nowrap}
+#test-ribbon{background:#BA7517;color:#fff;font-size:12px;font-weight:700;text-align:center;padding:3px 0;border-radius:8px;margin:0 14px 8px}
 .hdr-btn{background:none;border:.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-size:13px;padding:6px 10px;cursor:pointer;font-family:inherit}
 .body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;padding-bottom:max(24px,var(--safe-bot))}
 .body-nb{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:max(24px,var(--safe-bot))}
@@ -487,6 +495,13 @@ input[type=date],input[type=time]{color-scheme:light}
       <div style="font-size:11px;font-weight:700;color:var(--mt);margin:14px 0 6px;letter-spacing:.5px">▼ ラウンドの追加（今のデータは消えません）</div>
       <button class="btn btn-g btn-s" onclick="openAppendDialog()" style="width:100%">➕ ラウンドデータを追加（後入れ用）</button>
     </div>
+
+    <div class="card" id="trash-card">
+      <div class="ctit">🗑 最近削除したラウンド</div>
+      <div style="font-size:12px;color:var(--mt);margin-bottom:10px;line-height:1.5">削除してから30日間はここに残り、「戻す」で一覧に戻せます。30日を過ぎると自動で消えます。</div>
+      <div id="trash-list"></div>
+    </div>
+    <div id="app-version" style="font-size:11px;color:var(--mt);text-align:center;margin:6px 0 20px"></div>
   </div>
 </div>
 
@@ -844,6 +859,7 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
   <div class="body">
     <div class="card">
+      <div id="pen-pending" class="warn" style="display:none;margin-bottom:10px"></div>
       <div class="ctit">スコア（オン数・パット数を選ぶと自動計算）</div>
       <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:12px;color:var(--mt)">記録ショット: <strong id="r-rec-shots">0</strong>打 + 罰打 <strong id="r-pen">0</strong></div>
@@ -880,7 +896,8 @@ input[type=date],input[type=time]{color-scheme:light}
       </div>
       <label style="margin-top:10px">合計打数（自動・修正したい場合のみ手入力）</label>
       <input type="number" id="h-score" placeholder="自動計算されます" oninput="chkScore()">
-      <div id="score-warn" class="warn" style="display:none">※ 自動計算と異なる値になっています（残します）</div>
+      <div id="score-warn" class="warn" style="display:none"><span id="score-warn-txt"></span>
+        <button class="btn btn-g" style="margin-top:6px;font-size:13px;padding:8px" onclick="scoreToAuto()">計算に戻す</button></div>
     </div>
     <div class="card" id="putt-detail-card">
       <div class="ctit">パット詳細（任意）</div>
@@ -1622,9 +1639,13 @@ const FUKUOKA = [
 
 // ========== STATE ==========
 const KEY = 'golf3';
+const IS_TEST = false;
+const APP_VERSION = 'v17';
+const TRASH_DAYS = 30;
 let D = {
   rounds: [],
   settings: { clubs: ['DR','3W','UT','5I','6I','7I','8I','9I','PW','AW','52°','56°','PT'], savedPlayers: [] },
+  trash: [],  // v16：最近削除したラウンド [{round, deletedAt}]
   ri: -1, hi: 0, editing: null, selWx: '晴', selDir: '', selWind: '無風',
   _selectedPlayers: []
 };
@@ -1634,32 +1655,65 @@ function loadData() {
     const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
     if(saved.rounds) D.rounds = saved.rounds;
     if(saved.settings) D.settings = Object.assign(D.settings, saved.settings);
+    if(Array.isArray(saved.trash)) D.trash = saved.trash;
   } catch(e) {}
+  try { normalizeScores(); } catch(e) {}
+  purgeTrash();
 }
-function sv() { localStorage.setItem(KEY, JSON.stringify({ rounds: D.rounds, settings: D.settings })); }
+// v17：打数は、手で直したホール（result.scoreManual）だけ手の数字を使い、ほかは「オン数＋パット数＋罰打」で計算し直す
+function holeShotCount(h) { return (h && Array.isArray(h.shots)) ? h.shots.length : 0; }
+function holePenaltyStrokes(h) {
+  if(!h) return 0;
+  if(holeShotCount(h)) return totalPenaltyStrokes(h);
+  return (h.result && parseInt(h.result.penalty)) || 0;  // 後入れ（1打ごとの記録なし）は保存した罰打
+}
+function scoreAutoOf(h) {
+  const r = h && h.result; if(!r) return 0;
+  return (r.on||0) + (r.putt||0) + holePenaltyStrokes(h);
+}
+// 手で入れた打数が、計算と違うホール（1打ごとの記録があるホールだけ）
+function scoreMismatch(h) {
+  const r = h && h.result;
+  if(!r || !r.score || !holeShotCount(h) || !r.scoreManual) return false;
+  return r.score !== scoreAutoOf(h);
+}
+// 処理（罰打）を決めていないOB・池・ペナルティの打
+function pendingPenaltyIdx(h) {
+  if(!h || !Array.isArray(h.shots)) return [];
+  const out = [];
+  h.shots.forEach((s,i) => { if(s && ['OB','池ポチャ','ペナルティ'].includes(s.land) && !s.penalty) out.push(i); });
+  return out;
+}
+function normalizeScores() {
+  (D.rounds||[]).forEach(rd => (rd && rd.holes || []).forEach(h => {
+    const r = h && h.result; if(!r || typeof r !== 'object') return;
+    const hasShots = holeShotCount(h) > 0;
+    // これまでの記録（印なし）：計算と同じなら自動、違えば手で直したものとみなす。後入れは手の数字のまま
+    if(r.scoreManual === undefined) r.scoreManual = hasShots ? (!!r.score && r.score !== scoreAutoOf(h)) : true;
+    if(hasShots && !r.scoreManual) {
+      r.penalty = totalPenaltyStrokes(h);
+      const a = scoreAutoOf(h);
+      if(a > 0) r.score = a;
+    }
+  }));
+}
+function sv() { normalizeScores(); localStorage.setItem(KEY, JSON.stringify({ rounds: D.rounds, settings: D.settings, trash: D.trash })); }
 const $ = id => document.getElementById(id);
 const rnd = () => D.rounds[D.ri];
 const hole = () => rnd().holes[D.hi];
 
-function go(id) {
-  const prev = document.querySelector('.screen.active');
-  if(prev) { prev.classList.add('left'); prev.classList.remove('active'); }
+// v16：画面の切り替えは、全部の画面をいったん戻してから、行き先の画面だけを出す（横すべりの動きはない）
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','left'));
   const el = $(id);
-  el.classList.remove('left');
   el.classList.add('active');
   el.scrollTop = 0;
   // 画面内の .body / .body-nb もトップへ
   el.querySelectorAll('.body, .body-nb').forEach(b => b.scrollTop = 0);
   onScreen(id);
 }
-function back(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','left'));
-  const el = $(id);
-  el.classList.add('active');
-  el.scrollTop = 0;
-  el.querySelectorAll('.body, .body-nb').forEach(b => b.scrollTop = 0);
-  onScreen(id);
-}
+function go(id) { showScreen(id); }
+function back(id) { showScreen(id); }
 function onScreen(id) {
   if(id==='s-home') { D._backfill = false; renderHome(); }
   if(id==='s-quick') renderQuick();
@@ -1667,7 +1721,7 @@ function onScreen(id) {
   if(id==='s-shots') renderShots();
   if(id==='s-result') initResultScreen();
   if(id==='s-summary') renderSummary();
-  if(id==='s-settings') { renderSettings(); updateLastExportInfo(); }
+  if(id==='s-settings') { renderSettings(); updateLastExportInfo(); renderTrash(); }
   if(id==='s-new-round') initNewRound();
 }
 
@@ -2359,6 +2413,7 @@ function renderHome() {
             ${diffLabel?`<div style="font-size:13px;color:${diffColor};font-weight:700;margin-top:2px">${diffLabel}</div>`:''}
             <div style="font-size:11px;color:var(--mt);margin-top:1px">${done.length}H完了</div>
           </div>
+          <button class="rc-more" onclick="event.stopPropagation();openRoundMenu(${ri})" aria-label="メニュー">…</button>
         </div>
       </div>`;
     }).join('');
@@ -2372,14 +2427,91 @@ function confirmDeleteRound(i) {
   if(!r) return;
   const courseLabel = r.course + (r.half?' '+r.half:'');
   const dateLabel = r.date || '日付なし';
-  const msg = `このラウンドを削除しますか？\n\n${courseLabel}\n${dateLabel}\n\n※この操作は取り消せません`;
+  const msg = `このラウンドを削除しますか？\n\n${courseLabel}\n${dateLabel}\n\n※${TRASH_DAYS}日間は、設定の「最近削除したラウンド」から戻せます`;
   if(confirm(msg)) {
-    D.rounds.splice(i,1);
-    if(D.ri === i) D.ri = -1;
-    else if(D.ri > i) D.ri -= 1;
-    sv();
+    moveRoundToTrash(i);
     renderHome();
   }
+}
+// v16：ラウンドを「最近削除したラウンド」に移す
+function moveRoundToTrash(i) {
+  const r = D.rounds[i];
+  if(!r) return;
+  D.rounds.splice(i,1);
+  D.trash.unshift({ round: r, deletedAt: new Date().toISOString() });
+  if(D.ri === i) D.ri = -1;
+  else if(D.ri > i) D.ri -= 1;
+  sv();
+}
+// v16：30日を過ぎたものを消す
+function purgeTrash() {
+  if(!Array.isArray(D.trash)) D.trash = [];
+  const limit = Date.now() - TRASH_DAYS*86400000;
+  const before = D.trash.length;
+  D.trash = D.trash.filter(t => t && t.round && new Date(t.deletedAt).getTime() > limit);
+  if(D.trash.length !== before) { try { sv(); } catch(e) {} }
+}
+function trashDaysLeft(t) {
+  const passed = (Date.now() - new Date(t.deletedAt).getTime()) / 86400000;
+  return Math.max(0, Math.ceil(TRASH_DAYS - passed));
+}
+function renderTrash() {
+  const el = $('trash-list'); if(!el) return;
+  if(!D.trash.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--mt)">削除したラウンドはありません</div>';
+    return;
+  }
+  el.innerHTML = D.trash.map((t,k) => {
+    const r = t.round;
+    const done = (r.holes||[]).filter(h=>h.result);
+    const tot = done.reduce((s,h)=>s+(h.result.score||0),0);
+    return `<div class="trash-row">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600">${r.course||'コース'}${tot?'　'+tot:''}</div>
+        <div style="font-size:11px;color:var(--mt);margin-top:2px">${r.date||'日付なし'}　あと${trashDaysLeft(t)}日で完全に削除</div>
+      </div>
+      <button class="btn btn-g btn-s trash-btn" onclick="restoreFromTrash(${k})">戻す</button>
+      <button class="btn btn-g btn-s trash-btn" style="color:var(--red)" onclick="purgeTrashItem(${k})">完全に削除</button>
+    </div>`;
+  }).join('');
+}
+function restoreFromTrash(k) {
+  const t = D.trash[k]; if(!t) return;
+  D.trash.splice(k,1);
+  insertRoundByDate(t.round);
+  D.ri = -1;
+  sv();
+  renderTrash();
+  alert(`戻しました\n\n${t.round.course||'コース'}\n${t.round.date||'日付なし'}\n\nホーム画面の一覧に戻っています。`);
+}
+function purgeTrashItem(k) {
+  const t = D.trash[k]; if(!t) return;
+  if(!confirm(`完全に削除しますか？\n\n${t.round.course||'コース'}\n${t.round.date||'日付なし'}\n\n※この操作は取り消せません`)) return;
+  D.trash.splice(k,1);
+  sv();
+  renderTrash();
+}
+
+// v16：ホーム画面のカードの「…」メニュー
+function openRoundMenu(ri) {
+  const r = D.rounds[ri]; if(!r) return;
+  closeRoundMenu();
+  const overlay = document.createElement('div');
+  overlay.className = 'penalty-overlay show';
+  overlay.id = 'round-menu';
+  overlay.onclick = (e) => { if(e.target === overlay) closeRoundMenu(); };
+  overlay.innerHTML = `<div class="penalty-sheet">
+    <div style="font-weight:700;font-size:15px">${r.course||'コース'}</div>
+    <div style="font-size:12px;color:var(--mt);margin:2px 0 12px">${r.date||'日付なし'}</div>
+    <button class="btn btn-g menu-btn" onclick="closeRoundMenu();loadRound(${ri})">開く</button>
+    <button class="btn btn-g menu-btn" onclick="closeRoundMenu();D.ri=${ri};openRoundEdit('s-home')">ラウンド情報の編集</button>
+    <button class="btn btn-g menu-btn" style="color:var(--red)" onclick="closeRoundMenu();confirmDeleteRound(${ri})">削除</button>
+    <button class="btn btn-p menu-btn" style="margin-top:6px" onclick="closeRoundMenu()">キャンセル</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+function closeRoundMenu() {
+  const m = $('round-menu'); if(m) m.remove();
 }
 
 // ===== ラウンド編集機能 =====
@@ -2455,10 +2587,9 @@ function saveRoundEdit() {
 function confirmDeleteCurrentRound() {
   const r = rnd(); if(!r) return;
   const courseLabel = r.course + (r.half?' '+r.half:'');
-  if(confirm(`このラウンドを削除しますか？\n\n${courseLabel}\n${r.date||'日付なし'}\n\n※この操作は取り消せません`)) {
-    D.rounds.splice(D.ri,1);
+  if(confirm(`このラウンドを削除しますか？\n\n${courseLabel}\n${r.date||'日付なし'}\n\n※${TRASH_DAYS}日間は、設定の「最近削除したラウンド」から戻せます`)) {
+    moveRoundToTrash(D.ri);
     D.ri = -1;
-    sv();
     back('s-home');
   }
 }
@@ -2508,6 +2639,7 @@ function renderHoles() {
       <div style="flex:1">
         <div style="font-size:15px;font-weight:600">${h.num}H ${origNumLabel}<span style="font-weight:400;font-size:13px;color:var(--mt)">Par${h.par}${h.dist?' · '+h.dist+'Y':''}</span></div>
         <div style="font-size:12px;color:var(--mt)">${h.shots.length}ショット${d?' · '+h.result.score+'打 ('+h.result.on+'オン'+h.result.putt+'パット)':''}</div>
+        ${scoreMismatch(h)?`<div style="font-size:12px;color:var(--red);font-weight:700">⚠ 計算（${scoreAutoOf(h)}打）と違う</div>`:''}${pendingPenaltyIdx(h).length&&d?`<div style="font-size:12px;color:var(--red);font-weight:700">⚠ OB・池の処理が決まっていない</div>`:''}
       </div>
       <div class="${dc}" style="font-size:13px;font-weight:800;text-align:right;line-height:1.2;flex-shrink:0;min-width:80px">${ds}</div>
     </div>`;
@@ -3041,6 +3173,14 @@ function showPenaltyDialog(shot, shotIdx, nextAction) {
 }
 
 function applyPenalty(shotIdx, label, penalty) {
+  if(_pendingPenaltyAction === 'stay') {
+    const hh = hole();
+    if(hh && hh.shots[shotIdx]) { hh.shots[shotIdx].penalty = { type: label, strokes: penalty }; sv(); }
+    $('penalty-overlay').classList.remove('show');
+    _pendingPenaltyAction = 'back';
+    updateAutoTotal(); chkScore(); renderPendingPenalty();
+    return;
+  }
   const h = hole();
   if(!h || !h.shots[shotIdx]) { dismissPenalty(); return; }
   h.shots[shotIdx].penalty = { type: label, strokes: penalty };
@@ -3060,6 +3200,7 @@ function applyPenalty(shotIdx, label, penalty) {
 }
 function dismissPenalty() {
   $('penalty-overlay').classList.remove('show');
+  if(_pendingPenaltyAction === 'stay') { _pendingPenaltyAction = 'back'; return; }
   // 「あとで決める」を選んだ場合：保存はされている、次アクションも実行
   if(_pendingPenaltyAction === 'continue') {
     back('s-shots');
@@ -3113,7 +3254,7 @@ function onOnPuttOtherInput(which) {
 function updateAutoTotal() {
   const h = hole(); if(!h) return;
   const recordedShots = h.shots.length;
-  const penalty = totalPenaltyStrokes(h);
+  const penalty = holePenaltyStrokes(h);
   // 合計打数 = オン数 + パット数 + 罰打 (OKでも加算したまま=ユーザの記録した数値を尊重)
   const total = (_resultState.on||0) + (_resultState.putt||0) + penalty;
   $('r-rec-shots').textContent = recordedShots;
@@ -3126,7 +3267,24 @@ function updateAutoTotal() {
 function chkScore() {
   const auto = parseInt($('r-auto-total').textContent) || 0;
   const inp = parseInt($('h-score').value);
-  $('score-warn').style.display = (inp && auto && inp!==auto) ? 'block' : 'none';
+  const show = !!(inp && auto && inp!==auto);
+  $('score-warn').style.display = show ? 'block' : 'none';
+  if(show) $('score-warn-txt').textContent = `⚠ 計算（${auto}打）と違う打数（${inp}打）が手で入っています。保存すると${inp}打になります。`;
+}
+// v17：手で入れた打数を消して、計算に戻す
+function scoreToAuto() { $('h-score').value = ''; chkScore(); }
+// v17：処理を決めていないOB・池の知らせ
+function renderPendingPenalty() {
+  const box = $('pen-pending'); if(!box) return;
+  const h = hole(); const idx = pendingPenaltyIdx(h);
+  if(!idx.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = 'block';
+  box.innerHTML = `<div style="font-weight:700;margin-bottom:6px">⚠ 処理（罰打）を決めていない打があります</div>` +
+    idx.map(i => `<button class="btn btn-g" style="margin-top:6px;font-size:14px" onclick="resolvePendingPenalty(${i})">${i+1}打目の${h.shots[i].land}（${h.shots[i].club||'-'}）の処理を決める</button>`).join('');
+}
+function resolvePendingPenalty(i) {
+  const h = hole(); if(!h || !h.shots[i]) return;
+  showPenaltyDialog(h.shots[i], i, 'stay');
 }
 
 function renderPuttDetails() {
@@ -3202,9 +3360,12 @@ function initResultScreen() {
     $('r-putt-other').value = _resultState.putt;
   }
   $('r-ok').checked = !!_resultState.ok;
-  $('h-score').value = r.score || '';
+  // v17：手で直したホールだけ、前の打数を欄に入れる（ほかは空にして、計算を使う）
+  $('h-score').value = (r.scoreManual ? r.score : '') || '';
   $('score-warn').style.display = 'none';
   updateAutoTotal();
+  chkScore();
+  renderPendingPenalty();
   renderPuttDetails();
   $('result-ttl').textContent = `${h.num}H 結果入力 (Par${h.par})`;
 }
@@ -3222,11 +3383,12 @@ function saveResult() {
 
     const on = _resultState.on || 0;
     const putt = _resultState.putt || 0;
-    const penalty = totalPenaltyStrokes(h);
+    const penalty = holePenaltyStrokes(h);
     const autoScore = on + putt + penalty;
     const hScoreEl = $('h-score');
-    const inputScore = hScoreEl ? parseInt(hScoreEl.value) : 0;
-    const score = inputScore || autoScore;
+    const inputScore = hScoreEl ? (parseInt(hScoreEl.value) || 0) : 0;
+    const scoreManual = !!inputScore && inputScore !== autoScore;
+    const score = scoreManual ? inputScore : autoScore;
 
     // ★バリデーション：オン数もパット数も0なら保存しない（誤操作防止）
     if(on === 0 && putt === 0 && score === 0) {
@@ -3250,12 +3412,15 @@ function saveResult() {
     }
 
     const okEl = $('r-ok');
+    const prevQ = (h.result && h.result.q && typeof h.result.q === 'object') ? h.result.q : null;  // v17：後入れの回数を残す
     h.result = {
       on, putt, score,
       ok: okEl ? okEl.checked : false,
       puttDetails: details,
-      penalty: penalty
+      penalty: penalty,
+      scoreManual: scoreManual
     };
+    if(!holeShotCount(h) && prevQ) h.result.q = prevQ;
     sv();
 
     // _resultState クリア
@@ -3836,7 +4001,7 @@ function doCopy() {
 }
 
 // ===== バックアップ/復元機能 =====
-const BACKUP_KEY = 'golf3_last_export';
+const BACKUP_KEY = KEY + '_last_export';
 
 function getBackupStatus() {
   if(!D.rounds || D.rounds.length === 0) return null;
@@ -3877,11 +4042,12 @@ function renderBackupBanner() {
 function exportData() {
   try {
     const data = {
-      version: 'v7',
+      version: APP_VERSION,
       appName: 'golf-pwa',
       exportDate: new Date().toISOString(),
       rounds: D.rounds || [],
-      settings: D.settings || {}
+      settings: D.settings || {},
+      trash: D.trash || []
     };
     const json = JSON.stringify(data);
     const blob = new Blob([json], { type: 'application/json' });
@@ -3913,11 +4079,12 @@ function exportData() {
 function exportToClipboard() {
   try {
     const data = {
-      version: 'v7',
+      version: APP_VERSION,
       appName: 'golf-pwa',
       exportDate: new Date().toISOString(),
       rounds: D.rounds || [],
-      settings: D.settings || {}
+      settings: D.settings || {},
+      trash: D.trash || []
     };
     const json = JSON.stringify(data);
     const ok = () => {
@@ -4016,6 +4183,8 @@ function processImport(text) {
   try {
     D.rounds = data.rounds;
     if(data.settings) D.settings = Object.assign(D.settings, data.settings);
+    if(Array.isArray(data.trash)) D.trash = data.trash;
+    purgeTrash();
     D.ri = -1; D.hi = 0; D.editing = null;
     sv();
     alert(`✅ 復元完了\n\n${cnt}件のラウンドを読み込みました。`);
@@ -4375,8 +4544,298 @@ function updateLastExportInfo() {
   el.innerHTML = `<span style="color:${color};font-weight:600">${prefix}最終バックアップ：${dateStr}<br><span style="font-weight:400;font-size:11px">（${dayLabel}）</span></span>`;
 }
 
+// v16：どの画面にも「ホーム」のボタン（ホーム画面を除く）
+const HOME_CONFIRM_SCREENS = ['s-new-round','s-hole-start','s-add-shot','s-result','s-round-edit'];
+function addHomeButtons() {
+  document.querySelectorAll('.screen').forEach(sc => {
+    if(sc.id === 's-home') return;
+    const hdr = sc.querySelector('.hdr');
+    if(!hdr || hdr.querySelector('.hdr-home')) return;
+    const b = document.createElement('button');
+    b.className = 'hdr-home';
+    b.setAttribute('aria-label','ホーム');
+    b.textContent = '🏠';
+    b.onclick = () => goHomeFrom(sc.id);
+    hdr.appendChild(b);
+  });
+}
+function goHomeFrom(id) {
+  if(HOME_CONFIRM_SCREENS.includes(id)) {
+    if(!confirm('入力中の内容は保存されません。\nホームに戻りますか？')) return;
+  }
+  closeRoundMenu();
+  document.querySelectorAll('.penalty-overlay').forEach(o => o.classList.remove('show'));
+  D.editing = null;
+  try { _savingResult = false; } catch(e) {}
+  back('s-home');
+}
+
+// v16：エラーが起きたら画面の上に知らせを出す
+function showErrorBanner(msg) {
+  const cur = document.querySelector('.screen.active');
+  const info = `版：${APP_VERSION}${IS_TEST?'（試し版）':''}\n画面：${cur?cur.id:'不明'}\n日時：${new Date().toLocaleString('ja-JP')}\n内容：${msg}`;
+  let b = $('err-banner');
+  if(!b) { b = document.createElement('div'); b.id = 'err-banner'; document.body.appendChild(b); }
+  b.innerHTML = `<div style="font-size:14px;font-weight:700;color:#A32D2D">問題が起きました</div>
+    <div style="font-size:12px;color:#791F1F;margin:3px 0 6px;line-height:1.5">この画面のスクショをClaudeに送ってください。保存済みの記録は消えていません。</div>
+    <pre id="err-text" style="font-size:10px;color:#791F1F;white-space:pre-wrap;word-break:break-all;max-height:90px;overflow:auto;background:#fff;border-radius:6px;padding:6px;margin-bottom:8px"></pre>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-g btn-s err-btn" onclick="copyErrorText()">内容をコピー</button>
+      <button class="btn btn-g btn-s err-btn" onclick="closeErrorBanner();goHomeFrom('')">ホームに戻る</button>
+      <button class="btn btn-g btn-s err-btn" onclick="closeErrorBanner()">閉じる</button>
+    </div>`;
+  $('err-text').textContent = info;
+}
+function closeErrorBanner() { const b = $('err-banner'); if(b) b.remove(); }
+function copyErrorText() {
+  const t = $('err-text') ? $('err-text').textContent : '';
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(() => alert('コピーしました')).catch(() => alert('コピーできませんでした。スクショを送ってください。'));
+  } else alert('コピーできませんでした。スクショを送ってください。');
+}
+window.addEventListener('error', e => {
+  showErrorBanner((e && e.message ? e.message : 'エラー') + (e && e.lineno ? `（${e.lineno}行目）` : ''));
+});
+window.addEventListener('unhandledrejection', e => {
+  const r = e && e.reason;
+  showErrorBanner((r && r.message) ? r.message : String(r));
+});
+
 loadData();
+addHomeButtons();
+if($('app-version')) $('app-version').textContent = `ゴルフ記録 ${APP_VERSION}${IS_TEST?'（試し版）':''}`;
+if(IS_TEST) {
+  const hero = document.querySelector('#s-home .body-nb');
+  if(hero) { const rb = document.createElement('div'); rb.id = 'test-ribbon'; rb.textContent = '試し版（ここでの記録は本番のアプリとは別です）'; hero.insertBefore(rb, hero.firstChild); }
+}
 renderHome();
 </script>
+<style>
+#gl-open{display:block;width:100%;margin:8px 0 4px;padding:12px;border-radius:12px;border:2px dashed #2e7d32;background:#f1f8e9;color:#1b5e20;font-size:15px;font-weight:600}
+#gl{position:fixed;inset:0;z-index:9999;background:#f7f7f4;color:#222;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 30px);display:none;font-size:14px}
+#gl h3{font-size:16px;margin:18px 0 6px}
+#gl .gl-card{background:#fff;border:1px solid #ddd;border-radius:12px;padding:12px;margin-bottom:12px}
+#gl button{font-size:14px;padding:10px 12px;border-radius:10px;border:1px solid #bbb;background:#fff;color:#222;margin:4px 4px 4px 0}
+#gl button.gl-main{background:#2e7d32;color:#fff;border-color:#2e7d32;font-size:16px;width:100%;padding:14px}
+#gl button.gl-on{background:#1b5e20;color:#fff;border-color:#1b5e20}
+#gl .gl-note{font-size:12px;color:#666;margin:4px 0}
+#gl table{width:100%;border-collapse:collapse;font-size:13px}
+#gl td,#gl th{border-bottom:1px solid #eee;padding:5px 3px;text-align:right}
+#gl td:first-child,#gl th:first-child{text-align:left}
+#gl canvas{width:100%;display:block;border-radius:10px;background:#dfe8d0;touch-action:manipulation}
+#gl select{width:100%;font-size:15px;padding:8px;border-radius:8px}
+#gl .gl-holes button{min-width:44px}
+#gl .gl-attr{font-size:11px;color:#555;margin-top:4px}
+#gl .gl-err{color:#b71c1c;font-size:13px;white-space:pre-wrap}
+</style>
+<div id="gl">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:18px;font-weight:700">📍 位置と地図の試し</div>
+    <button onclick="glClose()">閉じる</button>
+  </div>
+  <p class="gl-note">この画面は試しのためだけのものです。ゴルフの記録には触れません。結果は下の「結果をコピー」でClaudeに送ってください。</p>
+  <div class="gl-card">
+    <div>いま開いている場所：<b id="gl-mode"></b></div>
+  </div>
+
+  <h3>1　位置情報</h3>
+  <div class="gl-card">
+    <button class="gl-main" id="gl-get" onclick="glGet()">📍 今の位置を記録</button>
+    <div id="gl-status" class="gl-note"></div>
+    <div id="gl-perr" class="gl-err"></div>
+    <table id="gl-tbl"></table>
+    <canvas id="gl-mini" width="640" height="560" style="margin-top:8px;display:none"></canvas>
+    <div class="gl-attr" id="gl-mini-attr" style="display:none">出典：国土地理院（全国最新写真（シームレス））を加工して作成</div>
+    <div style="margin-top:6px"><button onclick="glClearPts()">記録した位置を全部消す</button></div>
+    <p class="gl-note">押すと最大10秒測り続け、いちばん正確な位置を残します（±5m以内になったらすぐ止まります）。試し方：空が開けた外で、同じ場所で3回押す（ずれの大きさが分かる）→ 歩いて30〜100歩ほど離れて押す（前の点からの距離が出る）。表の「地図」を押すと、その点をGoogleマップで開きます（立っていた場所と合っているかを見られます）。GARMINの腕時計で同じ2点の距離を測って比べるのもおすすめです。</p>
+  </div>
+
+  <h3>2　コースの地図データ</h3>
+  <div class="gl-card">
+    <button onclick="glFindCourses()">福岡のゴルフ場を探す（OpenStreetMap）</button>
+    <div id="gl-cstatus" class="gl-note"></div>
+    <select id="gl-course" style="display:none" onchange="glLoadCourse()"></select>
+    <div id="gl-counts" class="gl-note"></div>
+    <div id="gl-cerr" class="gl-err"></div>
+    <div id="gl-viewbox" style="display:none">
+      <div><button id="gl-b-illu" class="gl-on" onclick="glSetMode('illu')">イラスト</button><button id="gl-b-photo" onclick="glSetMode('photo')">航空写真</button></div>
+      <div class="gl-holes" id="gl-holes"></div>
+      <canvas id="gl-map" width="640" height="900"></canvas>
+      <div class="gl-attr" id="gl-attr"></div>
+    </div>
+  </div>
+
+  <h3>3　結果</h3>
+  <div class="gl-card">
+    <button onclick="glCopy()">結果をコピー</button>
+    <div id="gl-copied" class="gl-note"></div>
+  </div>
+</div>
+<script>
+(function(){
+if(typeof IS_TEST==='undefined' || !IS_TEST) return;
+const GLKEY='golf3test_gps', Z=18, TILE='https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg';
+const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+const g=id=>document.getElementById(id);
+let pts=[], perr='', courses=[], feats=[], holes=[], course=null, mode='illu', view=null, log=[];
+try{pts=JSON.parse(localStorage.getItem(GLKEY)||'[]')||[];}catch(e){pts=[];}
+function savePts(){try{localStorage.setItem(GLKEY,JSON.stringify(pts));}catch(e){}}
+function addLog(s){log.push(new Date().toLocaleTimeString('ja-JP')+' '+s);}
+function isStandalone(){return window.navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);}
+function proj(lat,lon){const n=256*Math.pow(2,Z);const s=Math.sin(lat*Math.PI/180);return {x:(lon+180)/360*n,y:(0.5-Math.log((1+s)/(1-s))/(4*Math.PI))*n};}
+function mpp(lat){return 156543.03392*Math.cos(lat*Math.PI/180)/Math.pow(2,Z);}
+function hav(a,b){const R=6371008.8,r=Math.PI/180;const dl=(b.lat-a.lat)*r,dn=(b.lon-a.lon)*r;const h=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
+const yd=m=>Math.round(m/0.9144);
+
+window.glOpen=function(){g('gl').style.display='block';g('gl-mode').textContent=isStandalone()?'ホーム画面のアプリ':'Safari';renderPts();};
+window.glClose=function(){g('gl').style.display='none';};
+
+let glBusy=false;
+window.glGet=function(){
+  if(glBusy)return;
+  if(!navigator.geolocation){perr='この画面では位置情報が使えません（navigator.geolocation がない）';g('gl-perr').textContent=perr;addLog(perr);return;}
+  glBusy=true;g('gl-perr').textContent='';const btn=g('gl-get');btn.style.opacity='0.6';
+  const t0=Date.now(),LIM=10000,GOOD=5;let best=null,first=null,n=0,done=false,wid=null,tm=null,iv=null;
+  const show=()=>{const left=Math.max(0,Math.ceil((LIM-(Date.now()-t0))/1000));g('gl-status').textContent='測っています…'+(best?' いちばん良い値 ±'+Math.round(best.coords.accuracy)+'m（'+n+'回）':'')+' あと'+left+'秒';};
+  const finish=(err)=>{if(done)return;done=true;if(wid!==null)navigator.geolocation.clearWatch(wid);clearTimeout(tm);clearInterval(iv);glBusy=false;btn.style.opacity='';
+    if(best){const c=best.coords;const sec=Math.round((Date.now()-t0)/100)/10;
+      pts.push({lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:Date.now(),sec:sec,n:n,acc0:first});savePts();
+      g('gl-status').textContent='記録しました（'+sec+'秒・'+n+'回測って、いちばん良い値 ±'+Math.round(c.accuracy)+'m）';
+      addLog('位置OK ±'+Math.round(c.accuracy)+'m（最初±'+Math.round(first)+'m、'+n+'回、'+sec+'秒）');renderPts();}
+    else{const names={1:'許可されていない（PERMISSION_DENIED）',2:'位置が分からない（POSITION_UNAVAILABLE）',3:'時間切れ（TIMEOUT）'};
+      perr='位置を取れませんでした：'+(err?(names[err.code]||err.code)+'\n'+(err.message||''):'10秒のうちに位置が届かなかった');g('gl-status').textContent='';g('gl-perr').textContent=perr;addLog(perr.replace('\n',' '));}
+  };
+  show();iv=setInterval(show,500);tm=setTimeout(()=>finish(null),LIM);
+  try{wid=navigator.geolocation.watchPosition(p=>{n++;if(first===null)first=p.coords.accuracy;if(!best||p.coords.accuracy<best.coords.accuracy)best=p;show();if(best.coords.accuracy<=GOOD)finish(null);},
+    e=>{if(!best)finish(e);},{enableHighAccuracy:true,timeout:LIM,maximumAge:0});}catch(e){finish({code:'?',message:String(e)});}
+};
+window.glClearPts=function(){if(!pts.length)return;if(!confirm('記録した位置（'+pts.length+'件）を全部消しますか？（ゴルフの記録には関係ありません）'))return;pts=[];savePts();renderPts();};
+
+function renderPts(){
+  const tb=g('gl-tbl');
+  if(!pts.length){tb.innerHTML='';g('gl-mini').style.display='none';g('gl-mini-attr').style.display='none';return;}
+  let h='<tr><th>No</th><th>時刻</th><th>ずれ</th><th>前から</th><th>1点目から</th><th></th></tr>';
+  pts.forEach((p,i)=>{const d1=i?yd(hav(pts[i-1],p))+'Y':'—',d0=i?yd(hav(pts[0],p))+'Y':'—';
+    h+='<tr><td>'+(i+1)+'</td><td>'+new Date(p.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</td><td>±'+Math.round(p.acc)+'m</td><td>'+d1+'</td><td>'+d0+'</td><td><a href="https://www.google.com/maps/search/?api=1&query='+p.lat.toFixed(6)+','+p.lon.toFixed(6)+'" target="_blank" rel="noopener" style="display:inline-block;padding:4px 8px;border:1px solid #2e7d32;border-radius:8px;color:#1b5e20;text-decoration:none">地図</a></td></tr>';});
+  tb.innerHTML=h;
+  const cv=g('gl-mini');cv.style.display='block';g('gl-mini-attr').style.display='block';
+  const last=pts[pts.length-1];let span=120;
+  pts.forEach(p=>{span=Math.max(span,hav(last,p)*2.4,p.acc*3);});
+  const c=proj(last.lat,last.lon);const s=cv.width/(span/mpp(last.lat));
+  drawView(cv,{cx:c.x,cy:c.y,rot:0,s:s,photo:true,illu:false,pts:true});
+}
+
+function tileImg(z,x,y,cb){const k=z+'/'+x+'/'+y;tileImg.c=tileImg.c||{};let im=tileImg.c[k];if(im){if(im.complete&&im.naturalWidth)return im;return null;}
+  im=new Image();im.crossOrigin='anonymous';im.onload=cb;im.onerror=()=>{addLog('航空写真の読み込みに失敗 '+k);};im.src=TILE.replace('{z}',z).replace('{x}',x).replace('{y}',y);tileImg.c[k]=im;return null;}
+
+function drawView(cv,v){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle=v.photo?'#6d7f5a':'#7cb35a';ctx.fillRect(0,0,W,H);
+  const tf=()=>{ctx.setTransform(1,0,0,1,0,0);ctx.translate(W/2,H/2);ctx.rotate(v.rot);ctx.scale(v.s,v.s);};const ox=v.cx,oy=v.cy;
+  const inv=(sx,sy)=>{const dx=(sx-W/2)/v.s,dy=(sy-H/2)/v.s,c=Math.cos(-v.rot),s=Math.sin(-v.rot);return {x:v.cx+dx*c-dy*s,y:v.cy+dx*s+dy*c};};
+  if(v.photo){
+    let tz=Math.round(Z+Math.log2(v.s));tz=Math.max(12,Math.min(18,tz));const tw=256*Math.pow(2,Z-tz);
+    const cs=[inv(0,0),inv(W,0),inv(0,H),inv(W,H)];const x0=Math.floor(Math.min(...cs.map(p=>p.x))/tw),x1=Math.floor(Math.max(...cs.map(p=>p.x))/tw),y0=Math.floor(Math.min(...cs.map(p=>p.y))/tw),y1=Math.floor(Math.max(...cs.map(p=>p.y))/tw);
+    tf();
+    if((x1-x0+1)*(y1-y0+1)<=160) for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){const im=tileImg(tz,x,y,()=>{clearTimeout(cv._rt);cv._rt=setTimeout(()=>drawView(cv,v),60);});if(im)ctx.drawImage(im,x*tw-ox,y*tw-oy,tw+0.5/v.s,tw+0.5/v.s);}
+  }
+  tf();
+  if(v.illu||v.outline) drawFeats(ctx,v);
+  if(v.pts&&pts.length){pts.forEach((p,i)=>{const q=proj(p.lat,p.lon);const r=p.acc/mpp(p.lat);
+    ctx.beginPath();ctx.arc(q.x-ox,q.y-oy,r,0,7);ctx.fillStyle='rgba(33,150,243,0.15)';ctx.fill();ctx.lineWidth=2/v.s;ctx.strokeStyle='rgba(33,150,243,0.8)';ctx.stroke();});
+    ctx.beginPath();pts.forEach((p,i)=>{const q=proj(p.lat,p.lon);i?ctx.lineTo(q.x-ox,q.y-oy):ctx.moveTo(q.x-ox,q.y-oy);});ctx.lineWidth=3/v.s;ctx.strokeStyle='#fff';ctx.stroke();
+    pts.forEach((p,i)=>{const q=proj(p.lat,p.lon);ctx.beginPath();ctx.arc(q.x-ox,q.y-oy,10/v.s,0,7);ctx.fillStyle='#e53935';ctx.fill();ctx.lineWidth=3/v.s;ctx.strokeStyle='#fff';ctx.stroke();
+      ctx.save();ctx.translate(q.x-ox,q.y-oy);ctx.rotate(-v.rot);ctx.scale(1/v.s,1/v.s);ctx.font='bold 28px sans-serif';ctx.fillStyle='#fff';ctx.strokeStyle='#000';ctx.lineWidth=4;ctx.strokeText(String(i+1),14,-10);ctx.fillText(String(i+1),14,-10);ctx.restore();});}
+  ctx.setTransform(1,0,0,1,0,0);
+}
+
+const STY={rough:['#8cc063',null],wood:['#3f6b35',null],water:['#4a90d9',null],fairway:['#a6d672','#8fc25c'],tee:['#a6d672','#6e9f45'],green:['#b9e48a','#7fb352'],bunker:['#ecdcb0','#c9b27a'],hole:[null,'#ffffff']};
+function kind(t){if(!t)return null;const gf=t.golf;
+  if(gf==='green')return'green';if(gf==='fairway')return'fairway';if(gf==='bunker')return'bunker';if(gf==='tee')return'tee';if(gf==='hole')return'hole';if(gf==='rough')return'rough';
+  if(gf==='water_hazard'||gf==='lateral_water_hazard'||t.natural==='water')return'water';if(t.natural==='wood'||t.landuse==='forest')return'wood';return null;}
+const ORDER=['rough','wood','water','fairway','tee','bunker','green','hole'];
+function drawFeats(ctx,v){
+  ORDER.forEach(k=>{feats.filter(f=>f.k===k).forEach(f=>{
+    f.rings.forEach(r=>{if(r.length<2)return;ctx.beginPath();r.forEach((p,i)=>i?ctx.lineTo(p.x-v.cx,p.y-v.cy):ctx.moveTo(p.x-v.cx,p.y-v.cy));
+      const st=STY[k];
+      if(k==='hole'){if(!v.illu&&!v.outline)return;ctx.setLineDash([14/v.s,10/v.s]);ctx.lineWidth=3/v.s;ctx.strokeStyle=v.photo?'rgba(255,255,255,0.8)':'rgba(255,255,255,0.7)';ctx.stroke();ctx.setLineDash([]);return;}
+      if(v.illu&&st[0]){ctx.closePath();ctx.fillStyle=st[0];ctx.fill();}
+      if(st[1]||v.outline){ctx.lineWidth=(v.illu?2:3)/v.s;ctx.strokeStyle=v.illu?(st[1]||st[0]):'rgba(255,255,255,0.85)';if(v.illu||k!=='wood')ctx.stroke();}
+    });
+  });});
+}
+
+async function overpass(q){
+  let last;
+  for(const u of OVERPASS){try{const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}catch(e){last=e;addLog('地図データの取得に失敗 '+u+' '+e.message);}}
+  throw last;
+}
+window.glFindCourses=async function(){
+  g('gl-cstatus').textContent='OpenStreetMap からゴルフ場の一覧を取り寄せています…（30秒ほどかかることがあります）';g('gl-cerr').textContent='';
+  try{
+    const bb='33.0,129.9,34.3,131.2';
+    const j=await overpass('[out:json][timeout:90];(way["leisure"="golf_course"]('+bb+');relation["leisure"="golf_course"]('+bb+'););out tags bb;');
+    const all=(j.elements||[]).filter(e=>e.bounds).map(e=>({id:e.type+'/'+e.id,name:(e.tags&&(e.tags.name||e.tags['name:ja']))||'',b:e.bounds}));
+    courses=all.filter(c=>c.name&&!/^\s*\d+\s*H/i.test(c.name)&&!/練習場/.test(c.name));const skipped=all.length-courses.length;
+    courses.sort((a,b)=>(b.name.includes('伊都')-a.name.includes('伊都'))||a.name.localeCompare(b.name,'ja'));
+    const sel=g('gl-course');sel.innerHTML='<option value="">ゴルフ場を選ぶ（'+courses.length+'件）</option>'+courses.map((c,i)=>'<option value="'+i+'">'+c.name.replace(/</g,'')+'</option>').join('');sel.style.display='block';
+    const hasIto=courses.some(c=>c.name.includes('伊都'));
+    g('gl-cstatus').textContent=courses.length+'件のゴルフ場が見つかりました（名前のないもの、ホールや練習場の区画など'+skipped+'件は外しました）。'+(hasIto?'伊都ゴルフ倶楽部があります。':'「伊都」を含む名前は見つかりませんでした。');
+    addLog('ゴルフ場 '+courses.length+'件（外した'+skipped+'件） 伊都:'+(hasIto?'あり':'なし'));
+  }catch(e){g('gl-cstatus').textContent='';g('gl-cerr').textContent='一覧を取り寄せられませんでした：'+(e&&e.message||e);addLog('一覧の取り寄せに失敗 '+(e&&e.message||e));}
+};
+function ringsOf(e){
+  if(e.type==='way'&&e.geometry)return [e.geometry.map(p=>proj(p.lat,p.lon))];
+  if(e.type==='relation'&&e.members)return e.members.filter(m=>m.geometry&&m.role!=='inner').map(m=>m.geometry.map(p=>proj(p.lat,p.lon)));
+  return [];
+}
+window.glLoadCourse=async function(){
+  const i=g('gl-course').value;if(i==='')return;course=courses[+i];
+  g('gl-counts').textContent='「'+course.name+'」の形のデータを取り寄せています…';g('gl-cerr').textContent='';g('gl-viewbox').style.display='none';
+  const b=course.b,m=0.002,bb=(b.minlat-m)+','+(b.minlon-m)+','+(b.maxlat+m)+','+(b.maxlon+m);
+  try{
+    const j=await overpass('[out:json][timeout:90];(way["golf"]('+bb+');relation["golf"]('+bb+');way["natural"~"^(water|wood)$"]('+bb+');way["landuse"="forest"]('+bb+'););out geom;');
+    feats=[];(j.elements||[]).forEach(e=>{const k=kind(e.tags);if(!k)return;feats.push({k,t:e.tags||{},rings:ringsOf(e)});});
+    holes=feats.filter(f=>f.k==='hole'&&f.rings[0]&&f.rings[0].length>=2).map(f=>({ref:f.t.ref||'?',par:f.t.par||'',name:f.t.name||'',line:f.rings[0]}));
+    holes.sort((a,b)=>(parseInt(a.ref)||99)-(parseInt(b.ref)||99));
+    const cnt=k=>feats.filter(f=>f.k===k).length;
+    const txt='ホールの線 '+holes.length+'本、グリーン '+cnt('green')+'、フェアウェイ '+cnt('fairway')+'、バンカー '+cnt('bunker')+'、ティー '+cnt('tee')+'、池 '+cnt('water')+'、林 '+cnt('wood');
+    g('gl-counts').textContent='「'+course.name+'」：'+txt;addLog(course.name+'：'+txt+' ホール番号:'+holes.map(h=>h.ref).join(','));
+    g('gl-holes').innerHTML='<button onclick="glShowHole(-1)">全体</button>'+holes.map((h,k)=>'<button onclick="glShowHole('+k+')">'+String(h.ref).replace(/</g,'')+'</button>').join('');
+    g('gl-viewbox').style.display='block';glShowHole(-1);
+  }catch(e){g('gl-counts').textContent='';g('gl-cerr').textContent='形のデータを取り寄せられませんでした：'+(e&&e.message||e);addLog('形のデータの取り寄せに失敗 '+(e&&e.message||e));}
+};
+window.glShowHole=function(k){
+  const cv=g('gl-map'),W=cv.width,H=cv.height;
+  if(k<0){const b=course.b,a=proj(b.maxlat,b.minlon),c=proj(b.minlat,b.maxlon);view={cx:(a.x+c.x)/2,cy:(a.y+c.y)/2,rot:0,s:Math.min(W/(c.x-a.x),H/(c.y-a.y))*0.95,hole:-1};}
+  else{const L=holes[k].line,t=L[0],gr=L[L.length-1];const vx=gr.x-t.x,vy=gr.y-t.y,len=Math.hypot(vx,vy)||1;
+    view={cx:(t.x+gr.x)/2,cy:(t.y+gr.y)/2,rot:-Math.PI/2-Math.atan2(vy,vx),s:H*0.8/len,hole:k};
+    let d=0;for(let i=1;i<L.length;i++)d+=Math.hypot(L[i].x-L[i-1].x,L[i].y-L[i-1].y);
+    const lat=course.b.minlat;addLog('ホール'+holes[k].ref+' 線の長さ約'+yd(d*mpp(lat))+'Y');}
+  [...g('gl-holes').children].forEach((b,i)=>b.classList.toggle('gl-on',i===k+1));
+  redrawMap();
+};
+window.glSetMode=function(m){mode=m;g('gl-b-illu').classList.toggle('gl-on',m==='illu');g('gl-b-photo').classList.toggle('gl-on',m==='photo');redrawMap();};
+function redrawMap(){if(!view)return;
+  const v=Object.assign({},view,{photo:mode==='photo',illu:mode==='illu',outline:mode==='photo',pts:true});drawView(g('gl-map'),v);
+  g('gl-attr').textContent=mode==='photo'?'出典：国土地理院（全国最新写真（シームレス））を加工して作成。白い線は © OpenStreetMap contributors':'© OpenStreetMap contributors（形のデータ）';}
+
+window.glCopy=function(){
+  const lines=['【位置と地図の試しの結果】','開いている場所：'+(isStandalone()?'ホーム画面のアプリ':'Safari'),'端末：'+navigator.userAgent,''];
+  lines.push('位置の記録 '+pts.length+'件');
+  pts.forEach((p,i)=>lines.push((i+1)+'. '+new Date(p.t).toLocaleString('ja-JP')+' 座標 '+p.lat.toFixed(6)+','+p.lon.toFixed(6)+' ずれ±'+Math.round(p.acc)+'m 取得'+(p.sec!=null?p.sec:'?')+'秒'+(p.n?'（'+p.n+'回測定・最初±'+Math.round(p.acc0)+'m）':'')+(i?' 前の点から'+yd(hav(pts[i-1],p))+'Y 1点目から'+yd(hav(pts[0],p))+'Y':'')));
+  if(perr)lines.push('最後のエラー：'+perr.replace('\n',' '));
+  lines.push('','記録：');log.slice(-30).forEach(s=>lines.push(s));
+  const txt=lines.join('\n');
+  const done=()=>{g('gl-copied').textContent='コピーしました。Claudeとの会話に貼り付けてください。';};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,()=>fallback());else fallback();
+  function fallback(){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){g('gl-copied').textContent='コピーできませんでした。';}ta.remove();}
+};
+
+const rb=document.getElementById('test-ribbon');
+if(rb){const bt=document.createElement('button');bt.id='gl-open';bt.textContent='📍 位置と地図の試し';bt.onclick=window.glOpen;rb.parentNode.insertBefore(bt,rb.nextSibling);}
+})();
+</script>
+
 </body>
 </html>
