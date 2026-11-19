@@ -4573,7 +4573,7 @@ renderHome();
     <canvas id="gl-mini" width="640" height="560" style="margin-top:8px;display:none"></canvas>
     <div class="gl-attr" id="gl-mini-attr" style="display:none">出典：国土地理院（全国最新写真（シームレス））を加工して作成</div>
     <div style="margin-top:6px"><button onclick="glClearPts()">記録した位置を全部消す</button></div>
-    <p class="gl-note">試し方：同じ場所で3〜4回押す（ずれの大きさが分かる）→ 歩いて30〜100歩ほど離れて押す（前の点からの距離が出る）。</p>
+    <p class="gl-note">押すと最大10秒測り続け、いちばん正確な位置を残します（±5m以内になったらすぐ止まります）。試し方：空が開けた外で、同じ場所で3回押す（ずれの大きさが分かる）→ 歩いて30〜100歩ほど離れて押す（前の点からの距離が出る）。</p>
   </div>
 
   <h3>2　コースの地図データ</h3>
@@ -4616,17 +4616,24 @@ const yd=m=>Math.round(m/0.9144);
 window.glOpen=function(){g('gl').style.display='block';g('gl-mode').textContent=isStandalone()?'ホーム画面のアプリ':'Safari';renderPts();};
 window.glClose=function(){g('gl').style.display='none';};
 
+let glBusy=false;
 window.glGet=function(){
+  if(glBusy)return;
   if(!navigator.geolocation){perr='この画面では位置情報が使えません（navigator.geolocation がない）';g('gl-perr').textContent=perr;addLog(perr);return;}
-  g('gl-status').textContent='位置を取得しています…（最大20秒）';g('gl-perr').textContent='';
-  const t0=Date.now();
-  navigator.geolocation.getCurrentPosition(p=>{
-    const c=p.coords;pts.push({lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:Date.now(),sec:Math.round((Date.now()-t0)/100)/10});savePts();
-    g('gl-status').textContent='記録しました（'+pts[pts.length-1].sec+'秒）';addLog('位置OK ±'+Math.round(c.accuracy)+'m '+pts[pts.length-1].sec+'秒');renderPts();
-  },e=>{
-    const names={1:'許可されていない（PERMISSION_DENIED）',2:'位置が分からない（POSITION_UNAVAILABLE）',3:'時間切れ（TIMEOUT）'};
-    perr='位置を取れませんでした：'+(names[e.code]||e.code)+'\n'+(e.message||'');g('gl-status').textContent='';g('gl-perr').textContent=perr;addLog(perr.replace('\n',' '));
-  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+  glBusy=true;g('gl-perr').textContent='';const btn=g('gl-get');btn.style.opacity='0.6';
+  const t0=Date.now(),LIM=10000,GOOD=5;let best=null,first=null,n=0,done=false,wid=null,tm=null,iv=null;
+  const show=()=>{const left=Math.max(0,Math.ceil((LIM-(Date.now()-t0))/1000));g('gl-status').textContent='測っています…'+(best?' いちばん良い値 ±'+Math.round(best.coords.accuracy)+'m（'+n+'回）':'')+' あと'+left+'秒';};
+  const finish=(err)=>{if(done)return;done=true;if(wid!==null)navigator.geolocation.clearWatch(wid);clearTimeout(tm);clearInterval(iv);glBusy=false;btn.style.opacity='';
+    if(best){const c=best.coords;const sec=Math.round((Date.now()-t0)/100)/10;
+      pts.push({lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:Date.now(),sec:sec,n:n,acc0:first});savePts();
+      g('gl-status').textContent='記録しました（'+sec+'秒・'+n+'回測って、いちばん良い値 ±'+Math.round(c.accuracy)+'m）';
+      addLog('位置OK ±'+Math.round(c.accuracy)+'m（最初±'+Math.round(first)+'m、'+n+'回、'+sec+'秒）');renderPts();}
+    else{const names={1:'許可されていない（PERMISSION_DENIED）',2:'位置が分からない（POSITION_UNAVAILABLE）',3:'時間切れ（TIMEOUT）'};
+      perr='位置を取れませんでした：'+(err?(names[err.code]||err.code)+'\n'+(err.message||''):'10秒のうちに位置が届かなかった');g('gl-status').textContent='';g('gl-perr').textContent=perr;addLog(perr.replace('\n',' '));}
+  };
+  show();iv=setInterval(show,500);tm=setTimeout(()=>finish(null),LIM);
+  try{wid=navigator.geolocation.watchPosition(p=>{n++;if(first===null)first=p.coords.accuracy;if(!best||p.coords.accuracy<best.coords.accuracy)best=p;show();if(best.coords.accuracy<=GOOD)finish(null);},
+    e=>{if(!best)finish(e);},{enableHighAccuracy:true,timeout:LIM,maximumAge:0});}catch(e){finish({code:'?',message:String(e)});}
 };
 window.glClearPts=function(){if(!pts.length)return;if(!confirm('記録した位置（'+pts.length+'件）を全部消しますか？（ゴルフの記録には関係ありません）'))return;pts=[];savePts();renderPts();};
 
@@ -4694,13 +4701,14 @@ window.glFindCourses=async function(){
   try{
     const bb='33.0,129.9,34.3,131.2';
     const j=await overpass('[out:json][timeout:90];(way["leisure"="golf_course"]('+bb+');relation["leisure"="golf_course"]('+bb+'););out tags bb;');
-    courses=(j.elements||[]).filter(e=>e.bounds).map(e=>({id:e.type+'/'+e.id,name:(e.tags&&(e.tags.name||e.tags['name:ja']))||'（名前なし）',b:e.bounds}));
+    const all=(j.elements||[]).filter(e=>e.bounds).map(e=>({id:e.type+'/'+e.id,name:(e.tags&&(e.tags.name||e.tags['name:ja']))||'',b:e.bounds}));
+    courses=all.filter(c=>c.name&&!/^\s*\d+\s*H/i.test(c.name)&&!/練習場/.test(c.name));const skipped=all.length-courses.length;
     courses.sort((a,b)=>(b.name.includes('伊都')-a.name.includes('伊都'))||a.name.localeCompare(b.name,'ja'));
     const sel=g('gl-course');sel.innerHTML='<option value="">ゴルフ場を選ぶ（'+courses.length+'件）</option>'+courses.map((c,i)=>'<option value="'+i+'">'+c.name.replace(/</g,'')+'</option>').join('');sel.style.display='block';
     const hasIto=courses.some(c=>c.name.includes('伊都'));
-    g('gl-cstatus').textContent=courses.length+'件のゴルフ場が見つかりました。'+(hasIto?'伊都ゴルフ倶楽部があります。':'「伊都」を含む名前は見つかりませんでした。');
-    addLog('ゴルフ場 '+courses.length+'件 伊都:'+(hasIto?'あり':'なし'));
-  }catch(e){g('gl-cstatus').textContent='';g('gl-cerr').textContent='一覧を取り寄せられませんでした：'+(e&&e.message||e);}
+    g('gl-cstatus').textContent=courses.length+'件のゴルフ場が見つかりました（名前のないもの、ホールや練習場の区画など'+skipped+'件は外しました）。'+(hasIto?'伊都ゴルフ倶楽部があります。':'「伊都」を含む名前は見つかりませんでした。');
+    addLog('ゴルフ場 '+courses.length+'件（外した'+skipped+'件） 伊都:'+(hasIto?'あり':'なし'));
+  }catch(e){g('gl-cstatus').textContent='';g('gl-cerr').textContent='一覧を取り寄せられませんでした：'+(e&&e.message||e);addLog('一覧の取り寄せに失敗 '+(e&&e.message||e));}
 };
 function ringsOf(e){
   if(e.type==='way'&&e.geometry)return [e.geometry.map(p=>proj(p.lat,p.lon))];
@@ -4721,7 +4729,7 @@ window.glLoadCourse=async function(){
     g('gl-counts').textContent='「'+course.name+'」：'+txt;addLog(course.name+'：'+txt+' ホール番号:'+holes.map(h=>h.ref).join(','));
     g('gl-holes').innerHTML='<button onclick="glShowHole(-1)">全体</button>'+holes.map((h,k)=>'<button onclick="glShowHole('+k+')">'+String(h.ref).replace(/</g,'')+'</button>').join('');
     g('gl-viewbox').style.display='block';glShowHole(-1);
-  }catch(e){g('gl-counts').textContent='';g('gl-cerr').textContent='形のデータを取り寄せられませんでした：'+(e&&e.message||e);}
+  }catch(e){g('gl-counts').textContent='';g('gl-cerr').textContent='形のデータを取り寄せられませんでした：'+(e&&e.message||e);addLog('形のデータの取り寄せに失敗 '+(e&&e.message||e));}
 };
 window.glShowHole=function(k){
   const cv=g('gl-map'),W=cv.width,H=cv.height;
@@ -4741,7 +4749,7 @@ function redrawMap(){if(!view)return;
 window.glCopy=function(){
   const lines=['【位置と地図の試しの結果】','開いている場所：'+(isStandalone()?'ホーム画面のアプリ':'Safari'),'端末：'+navigator.userAgent,''];
   lines.push('位置の記録 '+pts.length+'件');
-  pts.forEach((p,i)=>lines.push((i+1)+'. '+new Date(p.t).toLocaleString('ja-JP')+' ずれ±'+Math.round(p.acc)+'m 取得'+(p.sec!=null?p.sec:'?')+'秒'+(i?' 前の点から'+yd(hav(pts[i-1],p))+'Y 1点目から'+yd(hav(pts[0],p))+'Y':'')));
+  pts.forEach((p,i)=>lines.push((i+1)+'. '+new Date(p.t).toLocaleString('ja-JP')+' ずれ±'+Math.round(p.acc)+'m 取得'+(p.sec!=null?p.sec:'?')+'秒'+(p.n?'（'+p.n+'回測定・最初±'+Math.round(p.acc0)+'m）':'')+(i?' 前の点から'+yd(hav(pts[i-1],p))+'Y 1点目から'+yd(hav(pts[0],p))+'Y':'')));
   if(perr)lines.push('最後のエラー：'+perr.replace('\n',' '));
   lines.push('','記録：');log.slice(-30).forEach(s=>lines.push(s));
   const txt=lines.join('\n');
