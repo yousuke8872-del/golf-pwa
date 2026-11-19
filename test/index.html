@@ -4573,7 +4573,7 @@ renderHome();
     <canvas id="gl-mini" width="640" height="560" style="margin-top:8px;display:none"></canvas>
     <div class="gl-attr" id="gl-mini-attr" style="display:none">出典：国土地理院（全国最新写真（シームレス））を加工して作成</div>
     <div style="margin-top:6px"><button onclick="glClearPts()">記録した位置を全部消す</button></div>
-    <p class="gl-note">押すと最大10秒測り続け、いちばん正確な位置を残します（±5m以内になったらすぐ止まります）。試し方：空が開けた外で、同じ場所で3回押す（ずれの大きさが分かる）→ 歩いて30〜100歩ほど離れて押す（前の点からの距離が出る）。</p>
+    <p class="gl-note">押すと最大10秒測り続け、いちばん正確な位置を残します（±5m以内になったらすぐ止まります）。試し方：空が開けた外で、同じ場所で3回押す（ずれの大きさが分かる）→ 歩いて30〜100歩ほど離れて押す（前の点からの距離が出る）。表の「地図」を押すと、その点をGoogleマップで開きます（立っていた場所と合っているかを見られます）。GARMINの腕時計で同じ2点の距離を測って比べるのもおすすめです。</p>
   </div>
 
   <h3>2　コースの地図データ</h3>
@@ -4640,9 +4640,9 @@ window.glClearPts=function(){if(!pts.length)return;if(!confirm('記録した位�
 function renderPts(){
   const tb=g('gl-tbl');
   if(!pts.length){tb.innerHTML='';g('gl-mini').style.display='none';g('gl-mini-attr').style.display='none';return;}
-  let h='<tr><th>No</th><th>時刻</th><th>ずれ</th><th>前の点から</th><th>1点目から</th></tr>';
+  let h='<tr><th>No</th><th>時刻</th><th>ずれ</th><th>前から</th><th>1点目から</th><th></th></tr>';
   pts.forEach((p,i)=>{const d1=i?yd(hav(pts[i-1],p))+'Y':'—',d0=i?yd(hav(pts[0],p))+'Y':'—';
-    h+='<tr><td>'+(i+1)+'</td><td>'+new Date(p.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</td><td>±'+Math.round(p.acc)+'m</td><td>'+d1+'</td><td>'+d0+'</td></tr>';});
+    h+='<tr><td>'+(i+1)+'</td><td>'+new Date(p.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</td><td>±'+Math.round(p.acc)+'m</td><td>'+d1+'</td><td>'+d0+'</td><td><a href="https://www.google.com/maps/search/?api=1&query='+p.lat.toFixed(6)+','+p.lon.toFixed(6)+'" target="_blank" rel="noopener" style="display:inline-block;padding:4px 8px;border:1px solid #2e7d32;border-radius:8px;color:#1b5e20;text-decoration:none">地図</a></td></tr>';});
   tb.innerHTML=h;
   const cv=g('gl-mini');cv.style.display='block';g('gl-mini-attr').style.display='block';
   const last=pts[pts.length-1];let span=120;
@@ -4749,7 +4749,7 @@ function redrawMap(){if(!view)return;
 window.glCopy=function(){
   const lines=['【位置と地図の試しの結果】','開いている場所：'+(isStandalone()?'ホーム画面のアプリ':'Safari'),'端末：'+navigator.userAgent,''];
   lines.push('位置の記録 '+pts.length+'件');
-  pts.forEach((p,i)=>lines.push((i+1)+'. '+new Date(p.t).toLocaleString('ja-JP')+' ずれ±'+Math.round(p.acc)+'m 取得'+(p.sec!=null?p.sec:'?')+'秒'+(p.n?'（'+p.n+'回測定・最初±'+Math.round(p.acc0)+'m）':'')+(i?' 前の点から'+yd(hav(pts[i-1],p))+'Y 1点目から'+yd(hav(pts[0],p))+'Y':'')));
+  pts.forEach((p,i)=>lines.push((i+1)+'. '+new Date(p.t).toLocaleString('ja-JP')+' 座標 '+p.lat.toFixed(6)+','+p.lon.toFixed(6)+' ずれ±'+Math.round(p.acc)+'m 取得'+(p.sec!=null?p.sec:'?')+'秒'+(p.n?'（'+p.n+'回測定・最初±'+Math.round(p.acc0)+'m）':'')+(i?' 前の点から'+yd(hav(pts[i-1],p))+'Y 1点目から'+yd(hav(pts[0],p))+'Y':'')));
   if(perr)lines.push('最後のエラー：'+perr.replace('\n',' '));
   lines.push('','記録：');log.slice(-30).forEach(s=>lines.push(s));
   const txt=lines.join('\n');
