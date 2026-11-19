@@ -4536,5 +4536,224 @@ if(IS_TEST) {
 }
 renderHome();
 </script>
+<style>
+#gl-open{display:block;width:100%;margin:8px 0 4px;padding:12px;border-radius:12px;border:2px dashed #2e7d32;background:#f1f8e9;color:#1b5e20;font-size:15px;font-weight:600}
+#gl{position:fixed;inset:0;z-index:9999;background:#f7f7f4;color:#222;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 30px);display:none;font-size:14px}
+#gl h3{font-size:16px;margin:18px 0 6px}
+#gl .gl-card{background:#fff;border:1px solid #ddd;border-radius:12px;padding:12px;margin-bottom:12px}
+#gl button{font-size:14px;padding:10px 12px;border-radius:10px;border:1px solid #bbb;background:#fff;color:#222;margin:4px 4px 4px 0}
+#gl button.gl-main{background:#2e7d32;color:#fff;border-color:#2e7d32;font-size:16px;width:100%;padding:14px}
+#gl button.gl-on{background:#1b5e20;color:#fff;border-color:#1b5e20}
+#gl .gl-note{font-size:12px;color:#666;margin:4px 0}
+#gl table{width:100%;border-collapse:collapse;font-size:13px}
+#gl td,#gl th{border-bottom:1px solid #eee;padding:5px 3px;text-align:right}
+#gl td:first-child,#gl th:first-child{text-align:left}
+#gl canvas{width:100%;display:block;border-radius:10px;background:#dfe8d0;touch-action:manipulation}
+#gl select{width:100%;font-size:15px;padding:8px;border-radius:8px}
+#gl .gl-holes button{min-width:44px}
+#gl .gl-attr{font-size:11px;color:#555;margin-top:4px}
+#gl .gl-err{color:#b71c1c;font-size:13px;white-space:pre-wrap}
+</style>
+<div id="gl">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:18px;font-weight:700">📍 位置と地図の試し</div>
+    <button onclick="glClose()">閉じる</button>
+  </div>
+  <p class="gl-note">この画面は試しのためだけのものです。ゴルフの記録には触れません。結果は下の「結果をコピー」でClaudeに送ってください。</p>
+  <div class="gl-card">
+    <div>いま開いている場所：<b id="gl-mode"></b></div>
+  </div>
+
+  <h3>1　位置情報</h3>
+  <div class="gl-card">
+    <button class="gl-main" id="gl-get" onclick="glGet()">📍 今の位置を記録</button>
+    <div id="gl-status" class="gl-note"></div>
+    <div id="gl-perr" class="gl-err"></div>
+    <table id="gl-tbl"></table>
+    <canvas id="gl-mini" width="640" height="560" style="margin-top:8px;display:none"></canvas>
+    <div class="gl-attr" id="gl-mini-attr" style="display:none">出典：国土地理院（全国最新写真（シームレス））を加工して作成</div>
+    <div style="margin-top:6px"><button onclick="glClearPts()">記録した位置を全部消す</button></div>
+    <p class="gl-note">試し方：同じ場所で3〜4回押す（ずれの大きさが分かる）→ 歩いて30〜100歩ほど離れて押す（前の点からの距離が出る）。</p>
+  </div>
+
+  <h3>2　コースの地図データ</h3>
+  <div class="gl-card">
+    <button onclick="glFindCourses()">福岡のゴルフ場を探す（OpenStreetMap）</button>
+    <div id="gl-cstatus" class="gl-note"></div>
+    <select id="gl-course" style="display:none" onchange="glLoadCourse()"></select>
+    <div id="gl-counts" class="gl-note"></div>
+    <div id="gl-cerr" class="gl-err"></div>
+    <div id="gl-viewbox" style="display:none">
+      <div><button id="gl-b-illu" class="gl-on" onclick="glSetMode('illu')">イラスト</button><button id="gl-b-photo" onclick="glSetMode('photo')">航空写真</button></div>
+      <div class="gl-holes" id="gl-holes"></div>
+      <canvas id="gl-map" width="640" height="900"></canvas>
+      <div class="gl-attr" id="gl-attr"></div>
+    </div>
+  </div>
+
+  <h3>3　結果</h3>
+  <div class="gl-card">
+    <button onclick="glCopy()">結果をコピー</button>
+    <div id="gl-copied" class="gl-note"></div>
+  </div>
+</div>
+<script>
+(function(){
+if(typeof IS_TEST==='undefined' || !IS_TEST) return;
+const GLKEY='golf3test_gps', Z=18, TILE='https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg';
+const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+const g=id=>document.getElementById(id);
+let pts=[], perr='', courses=[], feats=[], holes=[], course=null, mode='illu', view=null, log=[];
+try{pts=JSON.parse(localStorage.getItem(GLKEY)||'[]')||[];}catch(e){pts=[];}
+function savePts(){try{localStorage.setItem(GLKEY,JSON.stringify(pts));}catch(e){}}
+function addLog(s){log.push(new Date().toLocaleTimeString('ja-JP')+' '+s);}
+function isStandalone(){return window.navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);}
+function proj(lat,lon){const n=256*Math.pow(2,Z);const s=Math.sin(lat*Math.PI/180);return {x:(lon+180)/360*n,y:(0.5-Math.log((1+s)/(1-s))/(4*Math.PI))*n};}
+function mpp(lat){return 156543.03392*Math.cos(lat*Math.PI/180)/Math.pow(2,Z);}
+function hav(a,b){const R=6371008.8,r=Math.PI/180;const dl=(b.lat-a.lat)*r,dn=(b.lon-a.lon)*r;const h=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
+const yd=m=>Math.round(m/0.9144);
+
+window.glOpen=function(){g('gl').style.display='block';g('gl-mode').textContent=isStandalone()?'ホーム画面のアプリ':'Safari';renderPts();};
+window.glClose=function(){g('gl').style.display='none';};
+
+window.glGet=function(){
+  if(!navigator.geolocation){perr='この画面では位置情報が使えません（navigator.geolocation がない）';g('gl-perr').textContent=perr;addLog(perr);return;}
+  g('gl-status').textContent='位置を取得しています…（最大20秒）';g('gl-perr').textContent='';
+  const t0=Date.now();
+  navigator.geolocation.getCurrentPosition(p=>{
+    const c=p.coords;pts.push({lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:Date.now(),sec:Math.round((Date.now()-t0)/100)/10});savePts();
+    g('gl-status').textContent='記録しました（'+pts[pts.length-1].sec+'秒）';addLog('位置OK ±'+Math.round(c.accuracy)+'m '+pts[pts.length-1].sec+'秒');renderPts();
+  },e=>{
+    const names={1:'許可されていない（PERMISSION_DENIED）',2:'位置が分からない（POSITION_UNAVAILABLE）',3:'時間切れ（TIMEOUT）'};
+    perr='位置を取れませんでした：'+(names[e.code]||e.code)+'\n'+(e.message||'');g('gl-status').textContent='';g('gl-perr').textContent=perr;addLog(perr.replace('\n',' '));
+  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+};
+window.glClearPts=function(){if(!pts.length)return;if(!confirm('記録した位置（'+pts.length+'件）を全部消しますか？（ゴルフの記録には関係ありません）'))return;pts=[];savePts();renderPts();};
+
+function renderPts(){
+  const tb=g('gl-tbl');
+  if(!pts.length){tb.innerHTML='';g('gl-mini').style.display='none';g('gl-mini-attr').style.display='none';return;}
+  let h='<tr><th>No</th><th>時刻</th><th>ずれ</th><th>前の点から</th><th>1点目から</th></tr>';
+  pts.forEach((p,i)=>{const d1=i?yd(hav(pts[i-1],p))+'Y':'—',d0=i?yd(hav(pts[0],p))+'Y':'—';
+    h+='<tr><td>'+(i+1)+'</td><td>'+new Date(p.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</td><td>±'+Math.round(p.acc)+'m</td><td>'+d1+'</td><td>'+d0+'</td></tr>';});
+  tb.innerHTML=h;
+  const cv=g('gl-mini');cv.style.display='block';g('gl-mini-attr').style.display='block';
+  const last=pts[pts.length-1];let span=120;
+  pts.forEach(p=>{span=Math.max(span,hav(last,p)*2.4,p.acc*3);});
+  const c=proj(last.lat,last.lon);const s=cv.width/(span/mpp(last.lat));
+  drawView(cv,{cx:c.x,cy:c.y,rot:0,s:s,photo:true,illu:false,pts:true});
+}
+
+function tileImg(z,x,y,cb){const k=z+'/'+x+'/'+y;tileImg.c=tileImg.c||{};let im=tileImg.c[k];if(im){if(im.complete&&im.naturalWidth)return im;return null;}
+  im=new Image();im.crossOrigin='anonymous';im.onload=cb;im.onerror=()=>{addLog('航空写真の読み込みに失敗 '+k);};im.src=TILE.replace('{z}',z).replace('{x}',x).replace('{y}',y);tileImg.c[k]=im;return null;}
+
+function drawView(cv,v){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle=v.photo?'#6d7f5a':'#7cb35a';ctx.fillRect(0,0,W,H);
+  const tf=()=>{ctx.setTransform(1,0,0,1,0,0);ctx.translate(W/2,H/2);ctx.rotate(v.rot);ctx.scale(v.s,v.s);};const ox=v.cx,oy=v.cy;
+  const inv=(sx,sy)=>{const dx=(sx-W/2)/v.s,dy=(sy-H/2)/v.s,c=Math.cos(-v.rot),s=Math.sin(-v.rot);return {x:v.cx+dx*c-dy*s,y:v.cy+dx*s+dy*c};};
+  if(v.photo){
+    let tz=Math.round(Z+Math.log2(v.s));tz=Math.max(12,Math.min(18,tz));const tw=256*Math.pow(2,Z-tz);
+    const cs=[inv(0,0),inv(W,0),inv(0,H),inv(W,H)];const x0=Math.floor(Math.min(...cs.map(p=>p.x))/tw),x1=Math.floor(Math.max(...cs.map(p=>p.x))/tw),y0=Math.floor(Math.min(...cs.map(p=>p.y))/tw),y1=Math.floor(Math.max(...cs.map(p=>p.y))/tw);
+    tf();
+    if((x1-x0+1)*(y1-y0+1)<=160) for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){const im=tileImg(tz,x,y,()=>{clearTimeout(cv._rt);cv._rt=setTimeout(()=>drawView(cv,v),60);});if(im)ctx.drawImage(im,x*tw-ox,y*tw-oy,tw+0.5/v.s,tw+0.5/v.s);}
+  }
+  tf();
+  if(v.illu||v.outline) drawFeats(ctx,v);
+  if(v.pts&&pts.length){pts.forEach((p,i)=>{const q=proj(p.lat,p.lon);const r=p.acc/mpp(p.lat);
+    ctx.beginPath();ctx.arc(q.x-ox,q.y-oy,r,0,7);ctx.fillStyle='rgba(33,150,243,0.15)';ctx.fill();ctx.lineWidth=2/v.s;ctx.strokeStyle='rgba(33,150,243,0.8)';ctx.stroke();});
+    ctx.beginPath();pts.forEach((p,i)=>{const q=proj(p.lat,p.lon);i?ctx.lineTo(q.x-ox,q.y-oy):ctx.moveTo(q.x-ox,q.y-oy);});ctx.lineWidth=3/v.s;ctx.strokeStyle='#fff';ctx.stroke();
+    pts.forEach((p,i)=>{const q=proj(p.lat,p.lon);ctx.beginPath();ctx.arc(q.x-ox,q.y-oy,10/v.s,0,7);ctx.fillStyle='#e53935';ctx.fill();ctx.lineWidth=3/v.s;ctx.strokeStyle='#fff';ctx.stroke();
+      ctx.save();ctx.translate(q.x-ox,q.y-oy);ctx.rotate(-v.rot);ctx.scale(1/v.s,1/v.s);ctx.font='bold 28px sans-serif';ctx.fillStyle='#fff';ctx.strokeStyle='#000';ctx.lineWidth=4;ctx.strokeText(String(i+1),14,-10);ctx.fillText(String(i+1),14,-10);ctx.restore();});}
+  ctx.setTransform(1,0,0,1,0,0);
+}
+
+const STY={rough:['#8cc063',null],wood:['#3f6b35',null],water:['#4a90d9',null],fairway:['#a6d672','#8fc25c'],tee:['#a6d672','#6e9f45'],green:['#b9e48a','#7fb352'],bunker:['#ecdcb0','#c9b27a'],hole:[null,'#ffffff']};
+function kind(t){if(!t)return null;const gf=t.golf;
+  if(gf==='green')return'green';if(gf==='fairway')return'fairway';if(gf==='bunker')return'bunker';if(gf==='tee')return'tee';if(gf==='hole')return'hole';if(gf==='rough')return'rough';
+  if(gf==='water_hazard'||gf==='lateral_water_hazard'||t.natural==='water')return'water';if(t.natural==='wood'||t.landuse==='forest')return'wood';return null;}
+const ORDER=['rough','wood','water','fairway','tee','bunker','green','hole'];
+function drawFeats(ctx,v){
+  ORDER.forEach(k=>{feats.filter(f=>f.k===k).forEach(f=>{
+    f.rings.forEach(r=>{if(r.length<2)return;ctx.beginPath();r.forEach((p,i)=>i?ctx.lineTo(p.x-v.cx,p.y-v.cy):ctx.moveTo(p.x-v.cx,p.y-v.cy));
+      const st=STY[k];
+      if(k==='hole'){if(!v.illu&&!v.outline)return;ctx.setLineDash([14/v.s,10/v.s]);ctx.lineWidth=3/v.s;ctx.strokeStyle=v.photo?'rgba(255,255,255,0.8)':'rgba(255,255,255,0.7)';ctx.stroke();ctx.setLineDash([]);return;}
+      if(v.illu&&st[0]){ctx.closePath();ctx.fillStyle=st[0];ctx.fill();}
+      if(st[1]||v.outline){ctx.lineWidth=(v.illu?2:3)/v.s;ctx.strokeStyle=v.illu?(st[1]||st[0]):'rgba(255,255,255,0.85)';if(v.illu||k!=='wood')ctx.stroke();}
+    });
+  });});
+}
+
+async function overpass(q){
+  let last;
+  for(const u of OVERPASS){try{const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}catch(e){last=e;addLog('地図データの取得に失敗 '+u+' '+e.message);}}
+  throw last;
+}
+window.glFindCourses=async function(){
+  g('gl-cstatus').textContent='OpenStreetMap からゴルフ場の一覧を取り寄せています…（30秒ほどかかることがあります）';g('gl-cerr').textContent='';
+  try{
+    const bb='33.0,129.9,34.3,131.2';
+    const j=await overpass('[out:json][timeout:90];(way["leisure"="golf_course"]('+bb+');relation["leisure"="golf_course"]('+bb+'););out tags bb;');
+    courses=(j.elements||[]).filter(e=>e.bounds).map(e=>({id:e.type+'/'+e.id,name:(e.tags&&(e.tags.name||e.tags['name:ja']))||'（名前なし）',b:e.bounds}));
+    courses.sort((a,b)=>(b.name.includes('伊都')-a.name.includes('伊都'))||a.name.localeCompare(b.name,'ja'));
+    const sel=g('gl-course');sel.innerHTML='<option value="">ゴルフ場を選ぶ（'+courses.length+'件）</option>'+courses.map((c,i)=>'<option value="'+i+'">'+c.name.replace(/</g,'')+'</option>').join('');sel.style.display='block';
+    const hasIto=courses.some(c=>c.name.includes('伊都'));
+    g('gl-cstatus').textContent=courses.length+'件のゴルフ場が見つかりました。'+(hasIto?'伊都ゴルフ倶楽部があります。':'「伊都」を含む名前は見つかりませんでした。');
+    addLog('ゴルフ場 '+courses.length+'件 伊都:'+(hasIto?'あり':'なし'));
+  }catch(e){g('gl-cstatus').textContent='';g('gl-cerr').textContent='一覧を取り寄せられませんでした：'+(e&&e.message||e);}
+};
+function ringsOf(e){
+  if(e.type==='way'&&e.geometry)return [e.geometry.map(p=>proj(p.lat,p.lon))];
+  if(e.type==='relation'&&e.members)return e.members.filter(m=>m.geometry&&m.role!=='inner').map(m=>m.geometry.map(p=>proj(p.lat,p.lon)));
+  return [];
+}
+window.glLoadCourse=async function(){
+  const i=g('gl-course').value;if(i==='')return;course=courses[+i];
+  g('gl-counts').textContent='「'+course.name+'」の形のデータを取り寄せています…';g('gl-cerr').textContent='';g('gl-viewbox').style.display='none';
+  const b=course.b,m=0.002,bb=(b.minlat-m)+','+(b.minlon-m)+','+(b.maxlat+m)+','+(b.maxlon+m);
+  try{
+    const j=await overpass('[out:json][timeout:90];(way["golf"]('+bb+');relation["golf"]('+bb+');way["natural"~"^(water|wood)$"]('+bb+');way["landuse"="forest"]('+bb+'););out geom;');
+    feats=[];(j.elements||[]).forEach(e=>{const k=kind(e.tags);if(!k)return;feats.push({k,t:e.tags||{},rings:ringsOf(e)});});
+    holes=feats.filter(f=>f.k==='hole'&&f.rings[0]&&f.rings[0].length>=2).map(f=>({ref:f.t.ref||'?',par:f.t.par||'',name:f.t.name||'',line:f.rings[0]}));
+    holes.sort((a,b)=>(parseInt(a.ref)||99)-(parseInt(b.ref)||99));
+    const cnt=k=>feats.filter(f=>f.k===k).length;
+    const txt='ホールの線 '+holes.length+'本、グリーン '+cnt('green')+'、フェアウェイ '+cnt('fairway')+'、バンカー '+cnt('bunker')+'、ティー '+cnt('tee')+'、池 '+cnt('water')+'、林 '+cnt('wood');
+    g('gl-counts').textContent='「'+course.name+'」：'+txt;addLog(course.name+'：'+txt+' ホール番号:'+holes.map(h=>h.ref).join(','));
+    g('gl-holes').innerHTML='<button onclick="glShowHole(-1)">全体</button>'+holes.map((h,k)=>'<button onclick="glShowHole('+k+')">'+String(h.ref).replace(/</g,'')+'</button>').join('');
+    g('gl-viewbox').style.display='block';glShowHole(-1);
+  }catch(e){g('gl-counts').textContent='';g('gl-cerr').textContent='形のデータを取り寄せられませんでした：'+(e&&e.message||e);}
+};
+window.glShowHole=function(k){
+  const cv=g('gl-map'),W=cv.width,H=cv.height;
+  if(k<0){const b=course.b,a=proj(b.maxlat,b.minlon),c=proj(b.minlat,b.maxlon);view={cx:(a.x+c.x)/2,cy:(a.y+c.y)/2,rot:0,s:Math.min(W/(c.x-a.x),H/(c.y-a.y))*0.95,hole:-1};}
+  else{const L=holes[k].line,t=L[0],gr=L[L.length-1];const vx=gr.x-t.x,vy=gr.y-t.y,len=Math.hypot(vx,vy)||1;
+    view={cx:(t.x+gr.x)/2,cy:(t.y+gr.y)/2,rot:-Math.PI/2-Math.atan2(vy,vx),s:H*0.8/len,hole:k};
+    let d=0;for(let i=1;i<L.length;i++)d+=Math.hypot(L[i].x-L[i-1].x,L[i].y-L[i-1].y);
+    const lat=course.b.minlat;addLog('ホール'+holes[k].ref+' 線の長さ約'+yd(d*mpp(lat))+'Y');}
+  [...g('gl-holes').children].forEach((b,i)=>b.classList.toggle('gl-on',i===k+1));
+  redrawMap();
+};
+window.glSetMode=function(m){mode=m;g('gl-b-illu').classList.toggle('gl-on',m==='illu');g('gl-b-photo').classList.toggle('gl-on',m==='photo');redrawMap();};
+function redrawMap(){if(!view)return;
+  const v=Object.assign({},view,{photo:mode==='photo',illu:mode==='illu',outline:mode==='photo',pts:true});drawView(g('gl-map'),v);
+  g('gl-attr').textContent=mode==='photo'?'出典：国土地理院（全国最新写真（シームレス））を加工して作成。白い線は © OpenStreetMap contributors':'© OpenStreetMap contributors（形のデータ）';}
+
+window.glCopy=function(){
+  const lines=['【位置と地図の試しの結果】','開いている場所：'+(isStandalone()?'ホーム画面のアプリ':'Safari'),'端末：'+navigator.userAgent,''];
+  lines.push('位置の記録 '+pts.length+'件');
+  pts.forEach((p,i)=>lines.push((i+1)+'. '+new Date(p.t).toLocaleString('ja-JP')+' ずれ±'+Math.round(p.acc)+'m 取得'+(p.sec!=null?p.sec:'?')+'秒'+(i?' 前の点から'+yd(hav(pts[i-1],p))+'Y 1点目から'+yd(hav(pts[0],p))+'Y':'')));
+  if(perr)lines.push('最後のエラー：'+perr.replace('\n',' '));
+  lines.push('','記録：');log.slice(-30).forEach(s=>lines.push(s));
+  const txt=lines.join('\n');
+  const done=()=>{g('gl-copied').textContent='コピーしました。Claudeとの会話に貼り付けてください。';};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,()=>fallback());else fallback();
+  function fallback(){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){g('gl-copied').textContent='コピーできませんでした。';}ta.remove();}
+};
+
+const rb=document.getElementById('test-ribbon');
+if(rb){const bt=document.createElement('button');bt.id='gl-open';bt.textContent='📍 位置と地図の試し';bt.onclick=window.glOpen;rb.parentNode.insertBefore(bt,rb.nextSibling);}
+})();
+</script>
+
 </body>
 </html>
