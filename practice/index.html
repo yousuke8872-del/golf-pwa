@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>練習の試し</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--g:#0b3d2e;--g2:#14573f;--gold:#c9a227;--bg:#f2f5f0;--card:#fff;--tx:#17201b;--mu:#69746d;--ln:#d9dfd8;--bl:#1e5bd8;--red:#c0392b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:"IBM Plex Sans JP",-apple-system,"Hiragino Sans",sans-serif;font-size:15px;line-height:1.5}
+.num{font-family:"Barlow Semi Condensed","IBM Plex Sans JP",-apple-system,sans-serif}
+header{background:var(--g);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;display:flex;align-items:baseline;gap:10px}
+header h1{font-size:17px;margin:0;font-weight:600}
+header span{font-size:12px;color:#cfe0d6}
+main{max-width:480px;margin:0 auto;padding:10px 10px 40px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-bottom:10px}
+.note{font-size:12px;color:var(--mu);margin:0 0 10px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--ln);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;color:var(--tx);font-family:inherit}
+.chip.on{background:var(--g);border-color:var(--g);color:#fff}
+.chip.done{border-color:var(--gold);color:#7a6210}
+.chip.on.done{color:#fff}
+.now{display:flex;align-items:baseline;gap:8px;margin:2px 0 6px}
+.now b{font-size:17px;font-weight:600}
+.now .cnt{margin-left:auto;font-size:20px;color:var(--g)}
+.lab{font-size:12px;color:var(--mu);margin:8px 0 4px}
+.row{display:flex;gap:6px}
+.b{flex:1;min-height:44px;border:1px solid var(--ln);background:#fff;border-radius:10px;font-size:14px;color:var(--tx);font-family:inherit;padding:4px 2px}
+.b.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:600}
+.b.sm{min-height:38px;font-size:13px}
+.read{text-align:center;margin-top:2px}
+.read .big{font-size:38px;font-weight:600;color:var(--bl);line-height:1.1}
+.read .big.none{color:var(--mu);font-size:18px;line-height:2.3}
+.read .sub{font-size:12px;color:var(--mu);min-height:18px}
+#dial{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.go{width:100%;min-height:54px;border:0;border-radius:12px;background:var(--g);color:#fff;font-size:17px;font-weight:600;font-family:inherit;margin-top:8px}
+.line{width:100%;min-height:44px;border:1px solid var(--g);border-radius:10px;background:#fff;color:var(--g);font-size:14px;font-weight:600;font-family:inherit}
+.err{color:var(--red);font-size:13px;margin-top:4px}
+.st{font-size:13px;color:var(--mu);margin:8px 0 0}
+#pv{width:100%;max-height:230px;background:#000;border-radius:8px;margin-top:8px}
+#sheet{width:100%;border-radius:8px;margin-top:8px;display:block}
+input[type=range]{width:100%;margin:8px 0}
+.hide{display:none}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td{padding:5px 2px;border-top:1px solid var(--ln);vertical-align:top}
+td.r{text-align:right;white-space:nowrap;color:var(--mu)}
+textarea{width:100%;min-height:70px;border:1px solid var(--ln);border-radius:10px;padding:8px;font-family:inherit;font-size:14px}
+.toast{position:sticky;bottom:10px;margin:0 auto;max-width:340px;background:#17201b;color:#fff;border-radius:10px;padding:10px 12px;font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<header><h1>練習の試し</h1><span id="ver"></span></header>
+<main>
+<div class="card">
+  <div class="chips" id="chips"></div>
+  <div class="now"><b id="now-name"></b><span class="note" id="now-goal" style="margin:0"></span><span class="cnt num" id="now-cnt"></span></div>
+
+  <div class="lab">1　打ち出し方向（線を指で動かす）</div>
+  <div class="read"><div class="big num none" id="ang-big">線を動かしてください</div><div class="sub" id="ang-sub"></div></div>
+  <svg id="dial" viewBox="0 0 320 172" role="img" aria-label="打ち出し方向">
+    <path d="M 62.4 66.4 A 138 138 0 0 1 257.6 66.4" fill="none" stroke="#c9d2c8" stroke-width="1" stroke-dasharray="3 5"/>
+    <line x1="160" y1="164" x2="62.4" y2="66.4" stroke="#dfe5dd" stroke-width="1"/>
+    <line x1="160" y1="164" x2="257.6" y2="66.4" stroke="#dfe5dd" stroke-width="1"/>
+    <text x="50" y="60" font-size="11" fill="#69746d" text-anchor="middle">左45°</text>
+    <text x="270" y="60" font-size="11" fill="#69746d" text-anchor="middle">右45°</text>
+    <line x1="160" y1="164" x2="160" y2="18" stroke="#8b958e" stroke-width="1.5" stroke-dasharray="5 5"/>
+    <text x="160" y="12" font-size="11" fill="#69746d" text-anchor="middle">0°</text>
+    <line id="dline" x1="160" y1="164" x2="160" y2="26" stroke="#1e5bd8" stroke-width="5" stroke-linecap="round" opacity="0"/>
+    <circle id="dtip" cx="160" cy="26" r="9" fill="#1e5bd8" opacity="0"/>
+    <circle cx="160" cy="164" r="7" fill="#fff" stroke="#8b958e" stroke-width="1.5"/>
+  </svg>
+  <div class="row"><button class="b sm" id="a-l">◀ 左へ1°</button><button class="b sm" id="a-0">真ん中 0°</button><button class="b sm" id="a-r">右へ1° ▶</button></div>
+
+  <div class="lab">2　当たり</div>
+  <div class="row" id="hit"></div>
+
+  <div class="lab" id="third-lab"></div>
+  <div class="row" id="third"></div>
+
+  <div class="lab">動画（ある球だけ）</div>
+  <button class="line" id="vbtn">この球の動画を付ける</button>
+  <input type="file" id="vf" accept="video/*" class="hide">
+  <p class="st" id="vst"></p>
+  <div id="vbox" class="hide">
+    <video id="pv" muted playsinline preload="auto"></video>
+    <input type="range" id="vsl" min="0" max="1" step="0.0333" value="0">
+    <div class="row"><button class="b sm" id="v-m">◀ 1コマ</button><button class="b sm" id="v-set">ここをインパクトにして作る</button><button class="b sm" id="v-p">1コマ ▶</button></div>
+    <img id="sheet" class="hide" alt="インパクト前後のコマ">
+    <button class="line hide" id="v-share" style="margin-top:8px">この画像を共有・保存</button>
+  </div>
+
+  <div class="err" id="err"></div>
+  <button class="go" id="next">次の球へ</button>
+</div>
+
+<div class="card">
+  <div class="lab" style="margin-top:0">今日の記録</div>
+  <table id="sum"></table>
+  <div class="lab">直近の球</div>
+  <table id="last"></table>
+  <button class="b sm" id="undo" style="width:100%;margin-top:8px">1つ戻す（最後の球を消す）</button>
+</div>
+
+<div class="card">
+  <div class="lab" style="margin-top:0">気づいたこと（任意）</div>
+  <textarea id="memo" placeholder="押しにくい所、分かりにくい所、時間がかかった所"></textarea>
+  <button class="go" id="copy" style="margin-top:10px">結果をコピー（Claudeに送る）</button>
+  <button class="line" id="shareall" style="margin-top:8px">コマ画像をまとめて共有・保存</button>
+  <button class="b sm" id="reset" style="width:100%;margin-top:8px">この試しの記録を全部消す</button>
+</div>
+<p class="note">ゴルフ記録アプリとは別のページです。アプリの記録には触れません。この試しの記録は、このiPhoneのSafariの中だけに残ります。</p>
+<div class="toast hide" id="toast"></div>
+</main>
+
+<script>
+'use strict';
+const VER = 'p1';
+const KEY = 'golfpr_trial_v1';
+const DBN = 'golfpr_trial', STORE = 'sheets';
+const HITS = ['芯', '少しズレ', 'ダフリ', 'トップ', 'シャンク'];
+const CURVES = ['フック', 'ドロー', 'ストレート', 'フェード', 'スライス'];
+const MENU = [
+  { id: 'd1', club: '56°', name: '芯に当てる', n: 5, type: 'dist', target: 30, tol: 10, goal: '芯が4球' },
+  { id: 'd2a', club: '56°', name: '30ヤード', n: 4, type: 'dist', target: 30, tol: 5, goal: '±5ヤード' },
+  { id: 'd2b', club: '56°', name: '50ヤード', n: 4, type: 'dist', target: 50, tol: 5, goal: '±5ヤード' },
+  { id: 'd2c', club: '56°', name: '70ヤード', n: 4, type: 'dist', target: 70, tol: 5, goal: '±5ヤード' },
+  { id: 'd3a', club: '52°', name: '90ヤード 振り幅決め', n: 3, type: 'dist', target: 90, tol: 10, goal: '振り幅を決める' },
+  { id: 'd3b', club: '52°', name: '90ヤード', n: 5, type: 'dist', target: 90, tol: 10, goal: '90±10が3球' },
+  { id: 'd4', club: '7I', name: 'ハーフスイング', n: 8, type: 'dir', ref: 100, goal: 'ミス1以下' },
+  { id: 'd5', club: 'DR', name: '右に出さない', n: 16, type: 'dir', ref: 210, goal: '右のOB 3以下' },
+  { id: 'd6', club: '5W', name: 'ティーショット', n: 6, type: 'dir', ref: 190, goal: '右のOB 1以下' },
+  { id: 'd7', club: '56°', name: '締めの30ヤード', n: 5, type: 'dist', target: 30, tol: 5, goal: '±5ヤードが4球' }
+];
+const $ = id => document.getElementById(id);
+const drill = id => MENU.find(d => d.id === id);
+
+let S = load();
+let D = newDraft();
+let V = null, tPick = 0, sheetBlob = null, drag = false, idbOK = null;
+
+function load() {
+  try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o && Array.isArray(o.balls)) return o; } catch (e) {}
+  return { started: new Date().toISOString(), cur: 'd1', balls: [], memo: '' };
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('保存できませんでした'); } }
+function newDraft() { return { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), ang: null, hit: null, third: null, vid: null }; }
+function countOf(id) { return S.balls.filter(b => b.drill === id).length; }
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.remove('hide'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.add('hide'), 2600); }
+
+function idb() { return new Promise((res, rej) => { const r = indexedDB.open(DBN, 1); r.onupgradeneeded = () => r.result.createObjectStore(STORE); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbDo(mode, fn) { const db = await idb(); return new Promise((res, rej) => { const tx = db.transaction(STORE, mode); const q = fn(tx.objectStore(STORE)); tx.oncomplete = () => { db.close(); res(q && q.result); }; tx.onerror = tx.onabort = () => { db.close(); rej(tx.error); }; }); }
+const idbPut = (k, v) => idbDo('readwrite', s => s.put(v, k));
+const idbGet = k => idbDo('readonly', s => s.get(k));
+const idbDel = k => idbDo('readwrite', s => s.delete(k));
+const idbClear = () => idbDo('readwrite', s => s.clear());
+
+function renderChips() {
+  const el = $('chips'); el.innerHTML = '';
+  MENU.forEach(d => {
+    const b = document.createElement('button'); const c = countOf(d.id);
+    b.className = 'chip' + (d.id === S.cur ? ' on' : '') + (c >= d.n ? ' done' : '');
+    b.textContent = `${d.club} ${d.name} ${c}/${d.n}`;
+    b.onclick = () => { S.cur = d.id; save(); D.third = null; renderAll(); };
+    el.appendChild(b);
+    if (d.id === S.cur) setTimeout(() => b.scrollIntoView({ inline: 'center', block: 'nearest' }), 0);
+  });
+}
+function renderNow() {
+  const d = drill(S.cur), c = countOf(d.id);
+  $('now-name').textContent = `${d.club} ${d.name}`;
+  $('now-goal').textContent = d.goal;
+  $('now-cnt').textContent = `${Math.min(c + 1, 99)}球目 / ${d.n}`;
+}
+function btnRow(el, items, cur, on) {
+  el.innerHTML = '';
+  items.forEach(it => { const b = document.createElement('button'); b.className = 'b' + (String(cur) === String(it.v) ? ' on' : ''); b.textContent = it.t; b.onclick = () => on(it.v); el.appendChild(b); });
+}
+function renderHit() { btnRow($('hit'), HITS.map(h => ({ v: h, t: h })), D.hit, v => { D.hit = v; renderHit(); clearErr(); }); }
+function renderThird() {
+  const d = drill(S.cur);
+  if (d.type === 'dist') {
+    $('third-lab').textContent = `3　落ちた距離（狙いは${d.target}ヤード）`;
+    const items = []; for (let y = d.target - 20; y <= d.target + 20; y += 5) if (y > 0) items.push({ v: y, t: String(y) });
+    btnRow($('third'), items, D.third, v => { D.third = v; renderThird(); clearErr(); });
+  } else {
+    $('third-lab').textContent = '3　曲がり';
+    btnRow($('third'), CURVES.map(c => ({ v: c, t: c })), D.third, v => { D.third = v; renderThird(); clearErr(); });
+  }
+  $('third').querySelectorAll('.b').forEach(b => { b.style.fontSize = '13px'; });
+}
+function angText(a) { return a === 0 ? '真ん中 0°' : (a > 0 ? '右 ' : '左 ') + Math.abs(a) + '°'; }
+function renderDial() {
+  const big = $('ang-big'), sub = $('ang-sub'), ln = $('dline'), tip = $('dtip');
+  if (D.ang === null) { big.textContent = '線を動かしてください'; big.classList.add('none'); sub.textContent = ''; ln.setAttribute('opacity', 0); tip.setAttribute('opacity', 0); return; }
+  const a = D.ang, r = a * Math.PI / 180, x = 160 + 138 * Math.sin(r), y = 164 - 138 * Math.cos(r);
+  ln.setAttribute('x2', x.toFixed(1)); ln.setAttribute('y2', y.toFixed(1)); ln.setAttribute('opacity', 1);
+  tip.setAttribute('cx', x.toFixed(1)); tip.setAttribute('cy', y.toFixed(1)); tip.setAttribute('opacity', 1);
+  big.classList.remove('none'); big.textContent = angText(a);
+  const d = drill(S.cur), ref = d.target || d.ref;
+  sub.textContent = a === 0 ? `${ref}ヤード先で、ずれなし` : `${ref}ヤード先で、約${Math.round(ref * Math.tan(Math.abs(r)))}ヤード${a > 0 ? '右' : '左'}`;
+}
+function setAng(a) { D.ang = Math.max(-45, Math.min(45, Math.round(a))); renderDial(); clearErr(); }
+function fromPtr(e) {
+  const svg = $('dial'), r = svg.getBoundingClientRect();
+  const x = (e.clientX - r.left) * 320 / r.width, y = (e.clientY - r.top) * 172 / r.height;
+  setAng(Math.atan2(x - 160, Math.max(164 - y, 1)) * 180 / Math.PI);
+}
+function clearErr() { $('err').textContent = ''; }
+
+function summary(d) {
+  const bs = S.balls.filter(b => b.drill === d.id); if (!bs.length) return '';
+  const parts = [`芯 ${bs.filter(b => b.hit === '芯').length}`];
+  const avg = bs.reduce((s, b) => s + b.ang, 0) / bs.length;
+  parts.push('方向の平均 ' + (Math.abs(avg) < 0.5 ? '0°' : (avg > 0 ? '右' : '左') + Math.abs(avg).toFixed(0) + '°'));
+  if (d.type === 'dist') parts.push(`±${d.tol}ヤード以内 ${bs.filter(b => Math.abs(b.third - d.target) <= d.tol).length}`);
+  else parts.push(`右5°以上 ${bs.filter(b => b.ang >= 5).length}`);
+  return parts.join('・');
+}
+function ballText(b) { const d = drill(b.drill); return `${angText(b.ang)}・${b.hit}・${d.type === 'dist' ? b.third + 'Y' : b.third}${b.vid && b.vid.sheetBytes ? '・動画' : ''}`; }
+function renderLog() {
+  $('sum').innerHTML = MENU.map(d => { const c = countOf(d.id); return c ? `<tr><td>${d.club} ${d.name}<br><span style="color:var(--mu)">${summary(d)}</span></td><td class="r num">${c}/${d.n}</td></tr>` : ''; }).join('') || '<tr><td style="color:var(--mu);border:0">まだ記録がありません</td></tr>';
+  $('last').innerHTML = S.balls.slice(-5).reverse().map(b => { const d = drill(b.drill); return `<tr><td>${d.club} ${d.name} ${b.n}球目</td><td class="r">${ballText(b)}</td></tr>`; }).join('');
+  $('undo').classList.toggle('hide', !S.balls.length);
+}
+function renderAll() { renderChips(); renderNow(); renderDial(); renderHit(); renderThird(); renderLog(); }
+
+function resetVideoUI() {
+  $('vbox').classList.add('hide'); $('sheet').classList.add('hide'); $('v-share').classList.add('hide'); $('vst').textContent = ''; $('vf').value = '';
+  if (V && V.url) { try { $('pv').removeAttribute('src'); $('pv').load(); URL.revokeObjectURL(V.url); } catch (e) {} }
+  V = null; sheetBlob = null;
+}
+function nextBall() {
+  const miss = []; if (D.ang === null) miss.push('打ち出し方向'); if (!D.hit) miss.push('当たり'); if (D.third === null) miss.push(drill(S.cur).type === 'dist' ? '落ちた距離' : '曲がり');
+  if (miss.length) { $('err').textContent = `${miss.join('・')}を選んでください`; return; }
+  const d = drill(S.cur);
+  S.balls.push({ id: D.id, drill: d.id, n: countOf(d.id) + 1, t: new Date().toISOString(), ang: D.ang, hit: D.hit, third: D.third, vid: D.vid });
+  if (countOf(d.id) >= d.n) { const i = MENU.indexOf(d), nx = MENU.slice(i + 1).find(m => countOf(m.id) < m.n); if (nx) { S.cur = nx.id; toast(`${d.club} ${d.name} が終わりました。次は ${nx.club} ${nx.name}`); } else toast('メニューが全部終わりました。下の「結果をコピー」を押してください'); }
+  save(); D = newDraft(); resetVideoUI(); renderAll(); window.scrollTo(0, 0);
+}
+
+function once(el, ev, ms) {
+  return new Promise((res, rej) => {
+    const to = setTimeout(() => { cl(); rej(new Error(ev + ' が届かない')); }, ms);
+    const ok = () => { cl(); res(); }, ng = () => { cl(); rej(new Error('動画を読み込めない')); };
+    function cl() { clearTimeout(to); el.removeEventListener(ev, ok); el.removeEventListener('error', ng); }
+    el.addEventListener(ev, ok); el.addEventListener('error', ng);
+  });
+}
+async function seek(t) {
+  const pv = $('pv'); t = Math.max(0, Math.min(V.dur - 0.05, t));
+  if (Math.abs(pv.currentTime - t) > 0.001) { const p = once(pv, 'seeked', 6000); pv.currentTime = t; await p; }
+  await new Promise(r => setTimeout(r, 25));
+}
+const cc = document.createElement('canvas'), cx = cc.getContext('2d', { willReadFrequently: true });
+function redCount() {
+  const pv = $('pv'), w = 96, h = Math.round(96 * pv.videoHeight / pv.videoWidth) || 144;
+  cc.width = w; cc.height = h; cx.drawImage(pv, 0, 0, w, h);
+  const d = cx.getImageData(0, 0, w, h).data; let n = 0;
+  for (let i = 0; i < d.length; i += 4) { const r = d[i], g = d[i + 1], b = d[i + 2]; if (r > 170 && g < 95 && b < 95 && r - g > 90) n++; }
+  return n;
+}
+async function findImpact() {
+  const m = V.meta, a = Math.min(0.3, V.dur * 0.05), z = V.dur - 0.15;
+  await seek(a); const base = redCount(); await seek(z); const end = redCount();
+  const thr = base + Math.max(20, Math.round(base * 0.5)); m.red = { base, end, thr };
+  if (end <= thr) { m.auto = false; return null; }
+  let lo = a, hi = z, k = 0;
+  while (hi - lo > 1 / 30 && k < 16) { const mid = (lo + hi) / 2; await seek(mid); if (redCount() > thr) hi = mid; else lo = mid; k++; }
+  m.steps = k; m.firstRed = +hi.toFixed(2); m.auto = true;
+  return Math.max(0, hi - 0.1);
+}
+const OFF = [-1.6, -0.9, -0.45, -0.2, 0, 0.1, 0.3, 1.0];
+async function makeSheet(imp) {
+  const pv = $('pv'), cw = 270, ch = Math.round(270 * pv.videoHeight / pv.videoWidth) || 405, lab = 26;
+  const c = document.createElement('canvas'); c.width = cw * 4; c.height = (ch + lab) * 2;
+  const x = c.getContext('2d'); x.fillStyle = '#111'; x.fillRect(0, 0, c.width, c.height); x.font = '600 15px sans-serif'; x.textBaseline = 'middle';
+  for (let i = 0; i < 8; i++) {
+    const t = imp + OFF[i], px = (i % 4) * cw, py = (i >> 2) * (ch + lab);
+    if (t >= 0 && t <= V.dur - 0.05) { await seek(t); x.drawImage(pv, px, py + lab, cw, ch); }
+    x.fillStyle = OFF[i] === 0 ? '#ffd54a' : '#fff';
+    x.fillText(OFF[i] === 0 ? 'インパクト' : (OFF[i] > 0 ? '+' : '−') + Math.abs(OFF[i]).toFixed(2) + '秒', px + 8, py + lab / 2);
+  }
+  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.8));
+}
+async function readCtime(file) {
+  const scan = buf => {
+    const u = new Uint8Array(buf), dv = new DataView(buf);
+    for (let i = 4; i < u.length - 24; i++) if (u[i] === 0x6d && u[i + 1] === 0x76 && u[i + 2] === 0x68 && u[i + 3] === 0x64) {
+      const sec = u[i + 4] === 1 ? Number(dv.getBigUint64(i + 8)) : dv.getUint32(i + 8);
+      if (sec > 2082844800) return new Date((sec - 2082844800) * 1000).toISOString();
+    }
+    return null;
+  };
+  const head = await file.slice(0, Math.min(file.size, 1 << 20)).arrayBuffer(); const r = scan(head);
+  if (r || file.size <= (1 << 20)) return r;
+  return scan(await file.slice(Math.max(0, file.size - (4 << 20))).arrayBuffer());
+}
+function vstatus(t) { $('vst').textContent = t; }
+async function onFile(file) {
+  const t0 = performance.now(), pv = $('pv');
+  const m = { name: file.name, size: file.size, type: file.type, ms: { pick: tPick ? Math.round(t0 - tPick) : null } };
+  D.vid = m; vstatus('動画を読み込んでいます…'); $('sheet').classList.add('hide'); $('v-share').classList.add('hide');
+  try {
+    if (V && V.url) URL.revokeObjectURL(V.url);
+    V = { file, url: URL.createObjectURL(file), meta: m, dur: 0 };
+    m.ctime = await readCtime(file).catch(() => null);
+    $('vbox').classList.remove('hide'); pv.src = V.url; pv.load();
+    await once(pv, 'loadedmetadata', 30000);
+    try { await pv.play(); } catch (e) { m.playErr = String(e.name || e); }
+    pv.pause();
+    V.dur = pv.duration; m.dur = +V.dur.toFixed(2); m.w = pv.videoWidth; m.h = pv.videoHeight;
+    const sl = $('vsl'); sl.max = Math.max(0.1, V.dur - 0.05).toFixed(2); sl.value = 0;
+    const t1 = performance.now(); m.ms.meta = Math.round(t1 - t0);
+    vstatus('インパクトを探しています…');
+    const imp = await findImpact(); m.ms.find = Math.round(performance.now() - t1);
+    if (imp === null) { vstatus('赤い線が見つかりませんでした。つまみでインパクトの所に合わせ、「ここをインパクトにして作る」を押してください。'); return; }
+    await build(imp);
+  } catch (e) { m.err = String(e && e.message || e); vstatus('うまくいきませんでした：' + m.err); }
+}
+async function build(imp) {
+  const m = V.meta, t = performance.now(); vstatus('コマを並べています…');
+  m.impact = +imp.toFixed(2);
+  const blob = await makeSheet(imp); m.ms.sheet = Math.round(performance.now() - t); m.sheetBytes = blob.size; sheetBlob = blob;
+  const img = $('sheet'); if (img.src) URL.revokeObjectURL(img.src); img.src = URL.createObjectURL(blob); img.classList.remove('hide'); $('v-share').classList.remove('hide');
+  try { await idbPut(D.id, blob); m.idb = true; idbOK = true; } catch (e) { m.idb = false; m.idbErr = String(e && e.name || e); idbOK = false; }
+  await seek(imp); $('vsl').value = imp;
+  const when = m.ctime ? '・撮った時刻 ' + new Date(m.ctime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+  vstatus(`インパクト ${imp.toFixed(2)}秒（${m.auto ? '自動' : '手で'}）・画像 ${Math.round(blob.size / 1024)}KB・かかった時間 ${((m.ms.meta + (m.ms.find || 0) + m.ms.sheet) / 1000).toFixed(1)}秒${when}`);
+}
+async function shareBlobs(list) {
+  const files = list.map(([n, b]) => new File([b], n, { type: 'image/jpeg' }));
+  if (navigator.canShare && navigator.canShare({ files })) { try { await navigator.share({ files }); return 'shared'; } catch (e) { return 'cancel'; } }
+  files.forEach(f => { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); });
+  return 'download';
+}
+function sheetName(b) { const d = drill(b.drill); return `練習_${S.started.slice(0, 10)}_${d.club.replace('°', '')}_${d.name.replace(/\s/g, '')}_${b.n}球目.jpg`; }
+
+function report() {
+  const L = [], ymd = new Date(S.started).toLocaleDateString('ja-JP');
+  L.push(`練習の試し ${VER}　${ymd}　全${S.balls.length}球`);
+  L.push(`端末：${navigator.userAgent}`);
+  L.push(`画面：${innerWidth}x${innerHeight} dpr${devicePixelRatio}　共有：${navigator.canShare ? 'あり' : 'なし'}　画像の保存：${idbOK === null ? '未確認' : idbOK ? '可' : '不可'}　開き方：${navigator.standalone ? 'ホーム画面' : 'Safari'}`);
+  L.push('', '[項目ごと]');
+  MENU.forEach(d => { const bs = S.balls.filter(b => b.drill === d.id); if (!bs.length) return; L.push(`${d.club} ${d.name} ${bs.length}/${d.n}（${summary(d)}）`); bs.forEach(b => L.push(`  ${b.n} ${new Date(b.t).toLocaleTimeString('ja-JP')} ${ballText(b)}`)); });
+  const vs = S.balls.filter(b => b.vid).concat(D.vid ? [{ drill: S.cur, n: '入力中', vid: D.vid }] : []);
+  if (vs.length) {
+    L.push('', '[動画]');
+    vs.forEach(b => { const v = b.vid, d = drill(b.drill), ms = v.ms || {}; L.push(`${d.club} ${d.name} ${b.n}：${(v.size / 1048576).toFixed(1)}MB ${v.type || '型なし'} ${v.dur || '?'}秒 ${v.w || '?'}x${v.h || '?'} 撮った時刻:${v.ctime || '読めない'} インパクト:${v.impact != null ? v.impact + '秒' : 'なし'}(${v.auto ? '自動' : '手'}) 赤:${v.red ? `${v.red.base}→${v.red.end} しきい${v.red.thr}` : '?'} 探し${v.steps || 0}回 時間ms 選ぶ${ms.pick}/読む${ms.meta}/探す${ms.find}/作る${ms.sheet} 画像${v.sheetBytes ? Math.round(v.sheetBytes / 1024) + 'KB' : 'なし'} 保存:${v.idb === true ? '可' : v.idb === false ? '不可 ' + (v.idbErr || '') : '-'}${v.playErr ? ' 再生:' + v.playErr : ''}${v.err ? ' エラー:' + v.err : ''}`); });
+  }
+  if (S.memo) L.push('', '[気づいたこと]', S.memo);
+  return L.join('\n');
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+  const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = 0; document.body.appendChild(ta); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); return ok;
+}
+
+$('ver').textContent = VER;
+const svg = $('dial');
+svg.addEventListener('pointerdown', e => { drag = true; try { svg.setPointerCapture(e.pointerId); } catch (x) {} fromPtr(e); e.preventDefault(); });
+svg.addEventListener('pointermove', e => { if (drag) { fromPtr(e); e.preventDefault(); } });
+['pointerup', 'pointercancel', 'pointerleave'].forEach(n => svg.addEventListener(n, () => { drag = false; }));
+$('a-l').onclick = () => setAng((D.ang === null ? 0 : D.ang) - 1);
+$('a-r').onclick = () => setAng((D.ang === null ? 0 : D.ang) + 1);
+$('a-0').onclick = () => setAng(0);
+$('next').onclick = nextBall;
+$('vbtn').onclick = () => { tPick = performance.now(); $('vf').click(); };
+$('vf').onchange = e => { const f = e.target.files && e.target.files[0]; if (f) onFile(f); };
+$('vsl').oninput = e => { if (V && V.dur) { $('pv').currentTime = Math.min(V.dur - 0.05, +e.target.value); vstatus(`${(+e.target.value).toFixed(2)}秒の所`); } };
+$('v-m').onclick = () => { if (V && V.dur) { const t = Math.max(0, $('pv').currentTime - 1 / 30); $('pv').currentTime = t; $('vsl').value = t; vstatus(`${t.toFixed(2)}秒の所`); } };
+$('v-p').onclick = () => { if (V && V.dur) { const t = Math.min(V.dur - 0.05, $('pv').currentTime + 1 / 30); $('pv').currentTime = t; $('vsl').value = t; vstatus(`${t.toFixed(2)}秒の所`); } };
+$('v-set').onclick = async () => { if (!V || !V.dur) return; V.meta.auto = false; try { await build($('pv').currentTime); } catch (e) { V.meta.err = String(e && e.message || e); vstatus('うまくいきませんでした：' + V.meta.err); } };
+$('v-share').onclick = async () => { if (sheetBlob) { const d = drill(S.cur); await shareBlobs([[sheetName({ drill: d.id, n: countOf(d.id) + 1 }), sheetBlob]]); } };
+$('undo').onclick = async () => { const b = S.balls[S.balls.length - 1]; if (!b || !confirm('最後の球の記録を消します。よろしいですか？')) return; S.balls.pop(); S.cur = b.drill; save(); try { await idbDel(b.id); } catch (e) {} renderAll(); };
+$('memo').value = S.memo || ''; $('memo').oninput = e => { S.memo = e.target.value; save(); };
+$('copy').onclick = async () => { const ok = await copyText(report()); toast(ok ? 'コピーしました。Claudeのチャットに貼り付けてください' : 'コピーできませんでした'); };
+$('shareall').onclick = async () => {
+  const list = []; for (const b of S.balls) if (b.vid && b.vid.sheetBytes) { try { const bl = await idbGet(b.id); if (bl) list.push([sheetName(b), bl]); } catch (e) {} }
+  if (!list.length) { toast('保存してあるコマ画像がありません'); return; }
+  const r = await shareBlobs(list); if (r === 'download') toast(`${list.length}枚を保存しました`);
+};
+$('reset').onclick = async () => { if (!confirm('この試しの記録とコマ画像を全部消します。ゴルフ記録アプリの記録は消えません。よろしいですか？')) return; localStorage.removeItem(KEY); try { await idbClear(); } catch (e) {} S = load(); D = newDraft(); resetVideoUI(); $('memo').value = ''; renderAll(); };
+renderAll();
+</script>
+</body>
+</html>
