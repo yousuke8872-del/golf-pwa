@@ -445,14 +445,6 @@ input[type=date],input[type=time]{color-scheme:light}
 .gps-prev{display:flex;justify-content:space-between;align-items:center;background:var(--surf);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:14px;cursor:pointer}
 .gps-prev .y{font-size:22px;font-weight:700;color:var(--gd)}
 .gps-prev .pen{font-size:12px;color:var(--mt)}
-.place-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-.place-btn{border:1px solid var(--bd);background:var(--surf);border-radius:10px;padding:9px 2px;text-align:center;font-size:12.5px;line-height:1.25;cursor:pointer}
-.place-btn.on{border:2px solid var(--gd);background:#E1F5EE;color:var(--gd);font-weight:700}
-.place-btn.gr{border-color:#1D9E75;color:#0F6E56;font-weight:700}
-.place-btn.ob{border-color:#E24B4A;color:#A32D2C;font-weight:700}
-.place-btn.wt{border-color:#378ADD;color:#1F5FA6;font-weight:700}
-.place-btn.pn{border-color:#BA7517;color:#8A5A00;font-weight:700}
-.place-sp{grid-column:span 2}
 .gps-cap{font-size:13px;font-weight:700;color:var(--gd);margin-top:8px;min-height:18px}
 .gps-cap.wait{color:var(--mt);font-weight:500}
 .gps-cap.ng{color:var(--red)}
@@ -474,6 +466,76 @@ input[type=date],input[type=time]{color-scheme:light}
 .ref-tag{display:inline-block;font-size:10.5px;font-weight:700;color:#8A5A00;background:#FFF3D6;border:1px solid #E7B54A;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px}
 .gps-hide,.gps-hold{display:none!important}
 .prov-tag{display:inline-block;padding:2px 7px;background:#FFF3D6;color:#8A5A00;border-radius:4px;font-size:11px;font-weight:700;margin-left:4px}
+.place-pad{position:relative;height:min(26vh,230px);min-height:150px;border-radius:12px;overflow:hidden;background:#CBE6B5;user-select:none;-webkit-user-select:none}
+.pz{position:absolute;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:#1a1a18;cursor:pointer;border:1px solid rgba(255,255,255,.75);line-height:1.1;text-align:center}
+.pz.on{box-shadow:inset 0 0 0 3px #0B5A44;font-weight:700;z-index:2}
+.z-obl{left:0;top:0;width:8%;height:100%;background:#EFB7B5;font-size:11px;color:#791F1F}
+.z-obr{right:0;top:0;width:8%;height:100%;background:#EFB7B5;font-size:11px;color:#791F1F}
+.z-wdl{left:8%;top:0;width:11%;height:100%;background:#3F8F5B;color:#fff}
+.z-wdr{right:8%;top:0;width:11%;height:100%;background:#3F8F5B;color:#fff}
+.z-gl{left:19%;top:0;width:15%;height:46%;background:#A9D494}
+.z-gr{right:19%;top:0;width:15%;height:46%;background:#A9D494}
+.z-rfl{left:19%;top:46%;width:15%;height:54%;background:#8CC27A}
+.z-rfr{right:19%;top:46%;width:15%;height:54%;background:#8CC27A}
+.z-gb{left:34%;top:0;width:32%;height:14%;background:#A9D494}
+.z-g{left:34%;top:14%;width:32%;height:22%;background:#A9D494;border:none}
+.gell{display:flex;align-items:center;justify-content:center;width:90%;height:88%;background:#1D9E75;color:#fff;border-radius:50%;border:2.5px solid #fff;font-weight:700;font-size:12.5px}
+.z-g.on{box-shadow:none}.z-g.on .gell{box-shadow:0 0 0 3px #0B5A44}
+.z-gf{left:34%;top:36%;width:32%;height:12%;background:#A9D494}
+.z-ap{left:34%;top:48%;width:32%;height:14%;background:#BFE0AA}
+.z-fw{left:34%;top:62%;width:32%;height:38%;background:#CBE6B5;font-size:15px;font-weight:700}
+.near .z-gb{height:22%}.near .z-g{top:22%;height:34%}.near .z-gf{top:56%;height:16%}.near .z-ap{top:72%;height:14%}.near .z-fw{top:86%;height:14%;font-size:12px}
+.near .z-gl,.near .z-gr{height:72%}.near .z-rfl,.near .z-rfr{top:72%;height:28%}
+.gps1.tight .place-pad{height:calc(min(26vh,230px) - 46px);min-height:112px}
+.place-hz{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.hz{border:1.5px solid var(--bd);background:var(--surf);border-radius:10px;padding:8px 2px;text-align:center;font-size:13px;cursor:pointer}
+.hz.bk{border-color:#D9A63A;color:#8A5A00}.hz.wt{border-color:#378ADD;color:#1F5FA6}.hz.pn{border-color:#BA7517;color:#8A5A00}
+.hz.on{background:#E1F5EE;border-width:2px;font-weight:700}
+#add-shot-body.gps1{display:flex;flex-direction:column;padding:8px 14px;padding-bottom:max(10px,var(--safe-bot))}
+.gps1 > *{flex-shrink:0}
+.gps1 .card{padding:0;border:none;background:none;margin:0 0 8px;border-radius:0}
+.gps1 #gps-top{order:1}
+.gps1 .g-pd,.gps1 .g-rem{order:2;padding:10px 12px;border:.5px solid var(--bd);background:var(--surf);border-radius:12px}
+.gps1 .g-club{order:3}.gps1 #shape-card{order:4}.gps1 .g-dir{order:5}.gps1 .g-eval{order:6}
+.gps1 #more-wind-card{order:70}.gps1 .g-lie{order:71}.gps1 .g-miss{order:72}.gps1 .g-traj{order:73}.gps1 .g-memo{order:74}.gps1 #more-hmemo-card{order:75}
+.gps1 .g-more{margin-bottom:14px}
+.gps1 #gps-actions{order:90;margin-top:auto;padding-top:4px}
+.gps1 .prov-card{padding:14px;border:.5px solid var(--bd);background:var(--surf);border-radius:var(--r)}
+.gps1 .g-main .ctit,.gps1 .shape-card-note,.gps1 #shape-card #sel-traj{display:none}
+.gps1 .g-more .ctit{margin-bottom:6px}
+.gps1:not(.more) .g-more{display:none!important}
+.gps1.more .g-main{display:none!important}
+.g-new{display:none}
+.gps1.more .g-new{display:block}
+.gps1.more #traj-only-card{display:block!important}
+.gps1 #sel-club{flex-wrap:nowrap;overflow-x:auto;gap:8px;margin:0;padding:2px 0;position:relative;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.gps1 #sel-club::-webkit-scrollbar{display:none}
+.gps1 #sel-club .tp{flex:0 0 72px;text-align:center;padding:12px 0;font-size:17px;font-weight:700;border-radius:12px;border:1px solid var(--bd);background:var(--surf)}
+.gps1 #sel-club .tp.cand{background:#E9F6F0;border-color:#8FD0BA}
+.gps1 #sel-club .tp.cand1{border:2px solid var(--g)}
+.gps1 #sel-club .tp.on{background:var(--g);border-color:var(--g);color:#fff}
+.gps1 .gps-cap{font-size:12px;margin-top:4px;min-height:16px}
+.gps1 .dir-ui{margin:0}
+.gps1 .dir-btn{flex-direction:row;justify-content:center;padding:11px 4px;gap:6px;font-size:14px}
+.gps1 .dir-btn .dir-arrow{font-size:16px;line-height:1}
+.gps1 .eval-grid{margin:0;gap:6px}
+.gps1 .eval-btn{min-height:44px;padding:4px 2px;flex-direction:row;gap:5px}
+.gps1 .eval-btn .eg{font-size:18px}.gps1 .eval-btn .el{font-size:10.5px}
+.gps1 .shape-grid{margin:0}
+.gps1 .shape-btn{min-height:44px;padding:3px 2px;gap:1px}
+.gps1 .shape-btn svg{width:26px;height:18px}
+.gps1 .gps-row{margin:0 0 6px}
+.gps1 .gps-prev{padding:8px 12px;margin-bottom:8px}
+.gps-prev .rem{font-size:12px;color:var(--mt)}
+.gps-prev .y.est{color:var(--mt);font-weight:500}
+.gps1 .gps-more-tgl{padding:6px}
+.gps1 .gps-sub{margin:2px 0 8px}
+.gps1 .gps-sub button{padding:9px 4px}
+.gps1 .gps-next{padding:15px!important}
+.gps1 .lie-btn{min-height:38px}
+.mwind{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mw{border:1px solid var(--bd);background:var(--surf);border-radius:9px;padding:9px 2px;text-align:center;font-size:12px;cursor:pointer}
+.mw.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:700}
 </style>
 </head>
 <body>
@@ -740,7 +802,7 @@ input[type=date],input[type=time]{color-scheme:light}
   </div>
   <div class="body" id="add-shot-body">
     <div id="gps-top" style="display:none">
-      <div class="gps-row"><span id="gps-step" style="font-size:12px;color:var(--mt)"></span><span id="gps-badge" class="gps-badge">GPS</span></div>
+      <div class="gps-row"><span id="gps-step" onclick="gpsEditHole()" style="font-size:12px;color:var(--mt);cursor:pointer"></span><span id="gps-badge" class="gps-badge">GPS</span></div>
       <div id="prov-banner" class="prov-banner" style="display:none">暫定球：最初の球と同じ所から打ちます</div>
       <div class="card prov-card" id="prov-card" style="display:none">
         <div class="prov-q">最初の球はありましたか？</div>
@@ -750,26 +812,28 @@ input[type=date],input[type=time]{color-scheme:light}
       </div>
       <div class="gps-prev" id="gps-prev" onclick="gpsEditPrev()"></div>
       <div id="gps-warn" class="gps-warn" style="display:none"></div>
-      <div class="card" id="place-card" style="display:none">
-        <div class="ctit">ボールの場所 <span style="font-size:11px;color:var(--sub);font-weight:400">（前の打の着地）</span></div>
-        <div class="place-grid" id="sel-place">
-          <div class="place-btn" data-v="左ラフ奥" onclick="pickPlace(this)">左ラフ<br>奥</div>
-          <div class="place-btn" data-v="左ラフ" onclick="pickPlace(this)">左ラフ</div>
-          <div class="place-btn" data-v="FW" onclick="pickPlace(this)">FW</div>
-          <div class="place-btn" data-v="右ラフ" onclick="pickPlace(this)">右ラフ</div>
-          <div class="place-btn" data-v="右ラフ奥" onclick="pickPlace(this)">右ラフ<br>奥</div>
-          <div class="place-btn" data-v="グリーン手前" onclick="pickPlace(this)">G手前</div>
-          <div class="place-btn" data-v="花道" onclick="pickPlace(this)">花道</div>
-          <div class="place-btn" data-v="グリーン奥" onclick="pickPlace(this)">G奥</div>
-          <div class="place-btn" data-v="グリーン左" onclick="pickPlace(this)">G左</div>
-          <div class="place-btn" data-v="グリーン右" onclick="pickPlace(this)">G右</div>
-          <div class="place-btn" data-v="バンカー" onclick="pickPlace(this)">バンカー</div>
-          <div class="place-btn" data-v="左林" onclick="pickPlace(this)">左林</div>
-          <div class="place-btn" data-v="右林" onclick="pickPlace(this)">右林</div>
-          <div class="place-btn gr place-sp" data-v="グリーンオン" onclick="pickPlace(this)">🏁 グリーン</div>
-          <div class="place-btn ob" data-v="OB" onclick="pickPlace(this)">OB</div>
-          <div class="place-btn wt" data-v="池ポチャ" onclick="pickPlace(this)">池</div>
-          <div class="place-btn pn" data-v="ペナルティ" onclick="pickPlace(this)">ペナ<br>ルティ</div>
+      <div class="card g-main" id="place-card" style="display:none">
+        <div id="sel-place">
+          <div class="place-pad" id="place-pad">
+            <div class="pz place-btn z-obl" data-v="OB" data-side="左" onclick="pickPlace(this)">OB</div>
+            <div class="pz place-btn z-wdl" data-v="左林" onclick="pickPlace(this)">林</div>
+            <div class="pz place-btn z-gl" data-v="グリーン左" onclick="pickPlace(this)">左</div>
+            <div class="pz place-btn z-rfl" data-v="左ラフ" onclick="pickPlace(this)">左ラフ</div>
+            <div class="pz place-btn z-gb" data-v="グリーン奥" onclick="pickPlace(this)">奥</div>
+            <div class="pz place-btn z-g" data-v="グリーンオン" onclick="pickPlace(this)"><span class="gell">グリーン</span></div>
+            <div class="pz place-btn z-gf" data-v="グリーン手前" onclick="pickPlace(this)">手前</div>
+            <div class="pz place-btn z-ap" data-v="花道" onclick="pickPlace(this)">花道</div>
+            <div class="pz place-btn z-fw" data-v="FW" onclick="pickPlace(this)">FW</div>
+            <div class="pz place-btn z-gr" data-v="グリーン右" onclick="pickPlace(this)">右</div>
+            <div class="pz place-btn z-rfr" data-v="右ラフ" onclick="pickPlace(this)">右ラフ</div>
+            <div class="pz place-btn z-wdr" data-v="右林" onclick="pickPlace(this)">林</div>
+            <div class="pz place-btn z-obr" data-v="OB" data-side="右" onclick="pickPlace(this)">OB</div>
+          </div>
+          <div class="place-hz">
+            <div class="place-btn hz bk" data-v="バンカー" onclick="pickPlace(this)">バンカー</div>
+            <div class="place-btn hz wt" data-v="池ポチャ" onclick="pickPlace(this)">池</div>
+            <div class="place-btn hz pn" data-v="ペナルティ" onclick="pickPlace(this)">ペナルティ</div>
+          </div>
         </div>
       </div>
     </div>
@@ -927,12 +991,30 @@ input[type=date],input[type=time]{color-scheme:light}
       <label>メモ（任意）</label>
       <input type="text" id="s-memo" placeholder="自由入力">
     </div>
+    <div class="card g-more g-new" id="more-wind-card">
+      <div class="ctit">風向き（このホール）</div>
+      <div class="mwind" id="more-wind">
+        <div class="mw" data-v="右前(アゲ&amp;左から)" onclick="pickMoreWind(this)">アゲ＆左 ↙</div>
+        <div class="mw" data-v="アゲンスト" onclick="pickMoreWind(this)">アゲ ↓</div>
+        <div class="mw" data-v="左前(アゲ&amp;右から)" onclick="pickMoreWind(this)">アゲ＆右 ↘</div>
+        <div class="mw" data-v="右から" onclick="pickMoreWind(this)">右から ←</div>
+        <div class="mw" data-v="無風" onclick="pickMoreWind(this)">無風</div>
+        <div class="mw" data-v="左から" onclick="pickMoreWind(this)">左から →</div>
+        <div class="mw" data-v="右奥(フォロー&amp;左から)" onclick="pickMoreWind(this)">フォロー＆左 ↖</div>
+        <div class="mw" data-v="フォロー" onclick="pickMoreWind(this)">フォロー ↑</div>
+        <div class="mw" data-v="左奥(フォロー&amp;右から)" onclick="pickMoreWind(this)">フォロー＆右 ↗</div>
+      </div>
+    </div>
+    <div class="card g-more g-new" id="more-hmemo-card">
+      <div class="ctit">ホールの備考（任意）</div>
+      <input type="text" id="more-hmemo" placeholder="ぬかるみ、セッティングが厳しい など" oninput="moreHoleMemo(this.value)" style="margin-bottom:0">
+    </div>
     <div class="dual-action vertical" id="std-actions">
       <button class="btn btn-p" onclick="saveShotAndContinue()">＋ 次のショット</button>
       <button class="btn btn-g" onclick="saveShotAndFinish()">🏁 ホール終了</button>
     </div>
     <div id="gps-actions" style="display:none">
-      <div class="gps-more-tgl" id="gps-more-tgl" onclick="gpsToggleMore()">＋ もっと入れる（ショット結果・弾道・メモ）</div>
+      <div class="gps-more-tgl" id="gps-more-tgl" onclick="gpsToggleMore()">＋ もっと（風向き・ライ・ショット結果・弾道・メモ）</div>
       <div class="gps-sub">
         <button onclick="gpsProvisional()">暫定球を打つ</button>
         <button onclick="gpsCupIn()">カップイン</button>
@@ -1785,7 +1867,7 @@ const FUKUOKA = [
 // ========== STATE ==========
 const KEY = 'golf3test';
 const IS_TEST = true;
-const APP_VERSION = 'v18';
+const APP_VERSION = 'v18b';
 const TRASH_DAYS = 30;
 let D = {
   rounds: [],
@@ -2803,6 +2885,7 @@ function openHole(i) {
     D.hi = i;
     const h = hole();
     if(!h) { alert('ホール情報が見つかりません (index=' + i + ')'); return; }
+    if(typeof gpsOn === 'function' && gpsOn()) { enterHoleDirect(); return; }
 
     // CSS状態を完全リセット
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','left'));
@@ -2902,7 +2985,7 @@ function pickClub(el, club) {
   el.parentElement.querySelectorAll('.tp').forEach(b => b.classList.remove('on'));
   el.classList.add('on');
   updateShapeCardVisibility(club);
-  try { if(gpsOn() && D.editing === null) gpsCapture(); } catch(e) { console.error(e); }
+  try { $('add-shot-body').classList.toggle('tight', club === 'DR'); if(gpsOn() && D.editing === null) gpsCapture(); } catch(e) { console.error(e); }
 }
 function updateShapeCardVisibility(club) {
   const shapeCard = $('shape-card');
@@ -3341,7 +3424,7 @@ function applyPenalty(shotIdx, label, penalty) {
     if(hh && hh.shots[shotIdx]) { hh.shots[shotIdx].penalty = { type: label, strokes: penalty }; sv(); }
     $('penalty-overlay').classList.remove('show');
     _pendingPenaltyAction = 'back';
-    try { gpsPrepare(false); } catch(e) {}
+    try { gpsRefresh(); gpsHints(true); } catch(e) {}
     return;
   }
   if(_pendingPenaltyAction === 'stay') {
@@ -3371,7 +3454,7 @@ function applyPenalty(shotIdx, label, penalty) {
 }
 function dismissPenalty() {
   $('penalty-overlay').classList.remove('show');
-  if(_pendingPenaltyAction === 'gpsplace') { _pendingPenaltyAction = 'back'; try { gpsPrepare(false); } catch(e) {} return; }
+  if(_pendingPenaltyAction === 'gpsplace') { _pendingPenaltyAction = 'back'; try { gpsRefresh(); gpsHints(true); } catch(e) {} return; }
   if(_pendingPenaltyAction === 'stay') { _pendingPenaltyAction = 'back'; return; }
   // 「あとで決める」を選んだ場合：保存はされている、次アクションも実行
   if(_pendingPenaltyAction === 'continue') {
@@ -4803,6 +4886,7 @@ function geoStart() {
       const lim = Date.now() - 30000;
       GEO.buf = GEO.buf.filter(x => x.t >= lim);
       geoBadge();
+      try { gpsLive(); } catch (e) {}
     }, e => { GEO.err = e; geoBadge(); }, { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
   } catch (e) { GEO.err = e; }
   clearInterval(GEO.iv); GEO.iv = setInterval(geoBadge, 2000);
@@ -4847,34 +4931,44 @@ function gToast(msg) {
   t.textContent = msg; t.style.opacity = '1'; clearTimeout(gToast.tm); gToast.tm = setTimeout(() => { t.style.opacity = '0'; }, 2600);
 }
 
-// ---- ショットの画面の作り（位置の形） ----
+// ---- ショットの画面の作り（位置の形・スクロールなしの1画面） ----
+const MORE_OPEN_TXT = '＋ もっと（風向き・ライ・ショット結果・弾道・メモ）';
 function _cardOf(id) { const e = $(id); return e ? e.closest('.card') : null; }
-function _gpsMoreCards() { return [_cardOf('sel-miss'), _cardOf('s-memo'), $('traj-only-card')].filter(Boolean); }
 function _gpsHide(el, on) { if (el) el.classList.toggle('gps-hide', !!on); }
+function _gpsMark() {
+  const m = (el, cls) => { if (el) cls.split(' ').forEach(c => el.classList.add(c)); };
+  m(_cardOf('sel-club'), 'g-main g-club'); m($('shape-card'), 'g-main'); m(_cardOf('dir-left'), 'g-main g-dir'); m(_cardOf('sel-eval'), 'g-main g-eval');
+  m(_cardOf('sel-lie'), 'g-more g-lie'); m(_cardOf('sel-miss'), 'g-more g-miss'); m($('traj-only-card'), 'g-more g-traj'); m(_cardOf('s-memo'), 'g-more g-memo');
+  m($('prev-dist-card'), 'g-pd'); m(_cardOf('s-remain'), 'g-rem');
+}
 function gpsPrepare(editing) {
   const body = $('add-shot-body'); if (!body) return;
-  body.querySelectorAll('.gps-hide,.gps-hold').forEach(e => e.classList.remove('gps-hide','gps-hold'));
+  body.querySelectorAll('.gps-hide,.gps-hold').forEach(e => e.classList.remove('gps-hide', 'gps-hold'));
   const on = gpsOn() && !editing;
+  body.classList.toggle('gps1', on); body.classList.remove('more', 'tight');
   $('gps-top').style.display = on ? 'block' : 'none';
   $('gps-actions').style.display = on ? 'block' : 'none';
   $('std-actions').style.display = on ? 'none' : '';
   $('gps-cap').style.display = on ? 'block' : 'none';
-  if (!on) { D.gps = null; return; }
   if (D.gps && D.gps.waiting) clearInterval(D.gps.waiting);
-  D.gps = { pos: null, prevDist: 0, prov: !!D._provNext, more: false, waiting: null };
+  if (!on) { D.gps = null; return; }
+  _gpsMark();
+  D.gps = { pos: null, prevDist: 0, prov: !!D._provNext, touched: false, waiting: null, liveAt: 0, remEst: 0, hintIdx: -1 };
   D._provNext = false;
   _gpsHide(document.querySelector('#add-shot-body .land-grid').closest('.card'), true);
   _gpsHide(_cardOf('s-remain'), true);
   _gpsHide($('prev-dist-card'), true);
-  _gpsMoreCards().forEach(c => _gpsHide(c, true));
-  $('gps-more-tgl').textContent = '＋ もっと入れる（ショット結果・弾道・メモ）';
-  const h = hole(), n = h.shots.length, last = h.shots[n - 1];
+  $('gps-more-tgl').textContent = MORE_OPEN_TXT;
+  if ($('place-pad')) $('place-pad').classList.remove('near');
+  const h = hole(), n = h.shots.length;
   if (D.gps.prov) $('add-ttl').textContent = `${h.num}H · ${n + 1}打目（暫定球）`;
   $('gps-cap').className = 'gps-cap wait';
-  $('gps-cap').textContent = n === 0 ? '番手を押すと、その場（ティー）の位置を記録します' : '番手を押すと、その場の位置を記録します';
+  $('gps-cap').textContent = n === 0 ? '番手を押すと、ティーの位置を記録します' : 'ボールの所で番手を押すと、位置を記録します';
   $('gps-warn').style.display = 'none';
   if (!getLie()) setLie('フラット');  // ライは初めから「フラット」
+  moreSync();
   gpsRefresh();
+  gpsHints(true);
   geoBadge();
 }
 // ボールの場所・前の打・暫定球の表示を、今の記録に合わせて描き直す（位置は消さない）
@@ -4884,29 +4978,45 @@ function gpsRefresh() {
   const provPending = !!(last && last.prov && last.prov.state === 'pending' && !D.gps.prov);
   $('prov-card').style.display = provPending ? 'block' : 'none';
   $('prov-banner').style.display = D.gps.prov ? 'block' : 'none';
-  $('gps-step').textContent = `${h.num}H · パー${h.par} · ${n + 1}打目${D.gps.prov ? '（暫定球）' : ''}`;
+  $('gps-step').textContent = `${h.num}H · パー${h.par} · ${n + 1}打目${D.gps.prov ? '（暫定球）' : ''} ✎`;
   const showPlace = n >= 1 && !D.gps.prov && !provPending;
   $('place-card').style.display = showPlace ? 'block' : 'none';
-  document.querySelectorAll('#sel-place .place-btn').forEach(b => b.classList.toggle('on', !!last && b.dataset.v === last.land));
-  // 暫定球の答え待ちのときは、ほかを隠す
+  document.querySelectorAll('#sel-place .place-btn').forEach(b => b.classList.toggle('on', !!last && b.dataset.v === last.land && (!b.dataset.side || !last.landSide || b.dataset.side === last.landSide)));
   const body = $('add-shot-body');
   [...body.children].forEach(c => { if (c.id !== 'gps-top') c.classList.toggle('gps-hold', provPending); });
   _gpsHide($('gps-prev'), provPending);
   if (D.gps.pos) gpsCalcPrev();
   gpsRenderPrev();
 }
+function gpsLiveDist() {   // 前の打の位置から今いる所まで（番手を押す前の目安）
+  const h = hole(), last = h.shots[h.shots.length - 1];
+  if (!last || !last.pos) return 0;
+  const b = geoBest(8000); return b ? toYd(distM(last.pos, b)) : 0;
+}
+// 残りヤードの目安（前の打の残り − 位置で測った距離）。番手の候補に使う
+function gpsRemainEst() {
+  if (!D.gps) return 0;
+  const h = hole(), n = h.shots.length, last = h.shots[n - 1];
+  if (n === 0) return h.dist || 0;
+  const pt = (last.penalty && last.penalty.type) || '';
+  if (D.gps.prov || /打ち直し/.test(pt)) return last.remain || 0;
+  if (/プレイング/.test(pt)) return 0;
+  const base = last.remain || 0; if (!base) return 0;
+  const d = D.gps.pos ? (last.pos ? toYd(distM(last.pos, D.gps.pos)) : 0) : gpsLiveDist();
+  if (!d) return 0;
+  return Math.max(1, base - d);
+}
 function gpsRenderPrev() {
   const h = hole(), n = h.shots.length, last = h.shots[n - 1], el = $('gps-prev');
   if (!el || !D.gps) return;
-  if (n === 0) { el.innerHTML = `<span>1打目（ティー）</span><span class="pen">${h.dist ? 'コースの距離 ' + h.dist + 'Y（参考）' : ''}</span>`; el.style.cursor = 'default'; return; }
-  if (D.gps.prov) { el.innerHTML = `<span>暫定球</span><span class="pen">最初の球と同じ所から</span>`; el.style.cursor = 'default'; return; }
+  const rem = D.gps.remEst || 0;
+  const remTxt = rem > 0 ? `<span class="rem">残り 約${rem}Y</span>` : '';
+  if (n === 0) { el.innerHTML = `<span>1打目（ティー）</span><span class="rem">${h.dist ? 'コースの距離 ' + h.dist + 'Y' : ''}</span>`; el.style.cursor = 'default'; return; }
+  if (D.gps.prov) { el.innerHTML = `<span>暫定球（最初の球と同じ所から）</span>${remTxt}`; el.style.cursor = 'default'; return; }
   el.style.cursor = 'pointer';
-  if (_prevDistShouldHide(last)) {
-    el.innerHTML = `<span>前の打　${last.club || '−'}</span><span class="pen">${last.penalty ? last.penalty.type : last.land}（飛距離は記録しない）</span>`;
-    return;
-  }
-  const d = D.gps.prevDist || (parseInt($('s-prev-dist').value) || 0);
-  el.innerHTML = `<span>前の打　${last.club || '−'}</span>` + (d ? `<span><span class="y">${d}Y</span> ✎</span>` : `<span class="pen">番手を押すと出ます ✎</span>`);
+  if (_prevDistShouldHide(last)) { el.innerHTML = `<span>前の打 ${last.club || '−'}　<span class="pen">${last.penalty ? last.penalty.type : last.land}</span></span>${remTxt}`; return; }
+  const typed = parseInt($('s-prev-dist').value) || 0, d = typed || D.gps.prevDist || 0, live = d ? 0 : gpsLiveDist();
+  el.innerHTML = `<span>前の打 ${last.club || '−'}　` + (d ? `<span class="y">${d}Y</span> ✎` : live ? `<span class="y est">約${live}Y</span>` : '<span class="pen">番手を押すと出ます</span>') + `</span>${remTxt}`;
 }
 function gpsEditPrev() {
   const h = hole(), n = h.shots.length, last = h.shots[n - 1];
@@ -4917,11 +5027,84 @@ function gpsEditPrev() {
   setTimeout(() => { try { $('s-prev-dist').focus(); } catch (e) {} }, 50);
 }
 function gpsToggleMore() {
-  if (!D.gps) return;
-  D.gps.more = !D.gps.more;
-  _gpsMoreCards().forEach(c => _gpsHide(c, !D.gps.more));
-  $('gps-more-tgl').textContent = D.gps.more ? '－ たたむ' : '＋ もっと入れる（ショット結果・弾道・メモ）';
+  const body = $('add-shot-body'); if (!D.gps) return;
+  const on = body.classList.toggle('more');
+  $('gps-more-tgl').textContent = on ? '← 入力の画面に戻る' : MORE_OPEN_TXT;
+  body.scrollTop = 0;
 }
+// 番手の候補（残りと平均飛距離から3つ）と、番手の帯の位置合わせ
+function gpsHints(scroll) {
+  if (!D.gps) return;
+  const strip = $('sel-club'); if (!strip) return;
+  const h = hole(), n = h.shots.length, last = h.shots[n - 1];
+  const rem = gpsRemainEst();
+  D.gps.remEst = rem;
+  const pt = (last && last.penalty && last.penalty.type) || '';
+  if (rem > 0 && (D.gps.pos || n === 0 || D.gps.prov || /打ち直し/.test(pt))) $('s-remain').value = rem;
+  const pad = $('place-pad'); if (pad && !D.gps.touched) pad.classList.toggle('near', n >= 1 && rem > 0 && rem <= 60);
+  gpsRenderPrev();
+  const tps = [...strip.querySelectorAll('.tp')];
+  tps.forEach(t => t.classList.remove('cand', 'cand1'));
+  let best = -1;
+  if (n === 0 && h.par >= 4) best = tps.findIndex(t => t.textContent.trim() === 'DR');
+  if (best < 0 && rem > 0) {
+    const st = {}; buildClubStats(allShotsForAvg()).forEach(c => { st[c.club] = c; });
+    let bd = 1e9;
+    tps.forEach((t, i) => { const c = st[t.textContent.trim()]; if (!c || c.club === 'PT') return; const dd = Math.abs(c.avg - rem); if (dd < bd) { bd = dd; best = i; } });
+  }
+  if (best < 0) return;
+  [best - 1, best, best + 1].forEach(i => { if (i < 0 || i >= tps.length) return; const t = tps[i]; if (t.textContent.trim() !== 'PT') t.classList.add('cand'); });
+  tps[best].classList.add('cand1');
+  if (scroll && D.gps.hintIdx !== best) {
+    D.gps.hintIdx = best;
+    const t = tps[best];
+    const go1 = () => { strip.scrollLeft = Math.max(0, t.offsetLeft - (strip.clientWidth - t.offsetWidth) / 2); };
+    go1(); requestAnimationFrame(go1);
+  }
+}
+function gpsLive() {   // 位置が新しくなったとき（まだ何も押していない間だけ）
+  if (!D.gps || D.gps.pos || D.gps.touched) return;
+  const now = Date.now(); if (now - (D.gps.liveAt || 0) < 1500) return;
+  D.gps.liveAt = now; gpsHints(true);
+}
+document.addEventListener('input', e => { try { if (e.target && e.target.id === 's-prev-dist' && D.gps) gpsRenderPrev(); } catch (er) {} });
+// 「もっと」の中の風向きと、ホールの備考
+function moreSync() {
+  const h = hole();
+  document.querySelectorAll('#more-wind .mw').forEach(b => b.classList.toggle('on', b.dataset.v === (h.wind || '無風')));
+  if ($('more-hmemo')) $('more-hmemo').value = h.memo || '';
+}
+function pickMoreWind(el) { const h = hole(); h.wind = el.dataset.v; h.windSet = true; sv(); moreSync(); }
+function moreHoleMemo(v) { const h = hole(); h.memo = v; sv(); }
+// ホール設定の画面を開かずに、1打目の画面へ（パーと距離は上の帯の ✎ で直す）
+function enterHoleDirect() {
+  const r = rnd(), h = hole();
+  if (!h.shots.length && !h.result && !h.windSet && D.hi > 0) { const pv = r.holes[D.hi - 1]; if (pv && pv.wind) h.wind = pv.wind; }
+  sv();
+  $('shots-ttl').textContent = `${h.num}H · Par${h.par}`;
+  $('shots-info').textContent = `${h.dist ? h.dist + 'Y · ' : ''}風: ${h.wind || '無風'}${h.memo ? ' · ' + h.memo : ''}`;
+  $('result-ttl').textContent = `${h.num}H 結果入力`;
+  $('hole-prog').style.width = Math.round((D.hi + 1) / r.holes.length * 100) + '%';
+  if (h.shots.length === 0 && !h.result) openAdd(); else go('s-shots');
+}
+function gpsEditHole() {
+  const h = hole(); let ov = $('hole-edit');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'hole-edit'; ov.className = 'penalty-overlay'; ov.onclick = e => { if (e.target === ov) ov.classList.remove('show'); }; document.body.appendChild(ov); }
+  ov.innerHTML = `<div class="penalty-sheet"><h3>${h.num}番ホールの情報</h3><div class="pdesc">コースのデータと違うときだけ直してください。</div>
+    <div class="ctit">パー</div><div class="tgrp" id="he-par">${[3, 4, 5, 6].map(p => `<div class="tp${h.par === p ? ' on' : ''}" onclick="pick(this)">${p}</div>`).join('')}</div>
+    <div class="ctit">距離（ヤード・参考）</div><input type="number" id="he-dist" value="${h.dist || ''}" placeholder="例: 380">
+    <button class="btn btn-p" style="margin-top:10px" onclick="gpsSaveHole()">保存</button>
+    <button class="btn btn-g" style="margin-top:8px" onclick="$('hole-edit').classList.remove('show')">閉じる</button></div>`;
+  ov.classList.add('show');
+}
+function gpsSaveHole() {
+  const h = hole();
+  h.par = parseInt(getSel('he-par')) || h.par; h.dist = parseInt($('he-dist').value) || 0; sv();
+  $('hole-edit').classList.remove('show');
+  $('shots-ttl').textContent = `${h.num}H · Par${h.par}`;
+  if (D.gps) { if (h.shots.length === 0) $('s-remain').value = h.dist || ''; D.gps.hintIdx = -1; gpsRefresh(); gpsHints(true); }
+}
+function _gpsPreSave() { try { if (getSel('sel-club') === 'DR') setTraj(getTrajOnly()); } catch (e) {} }
 
 // ---- 番手を押した瞬間に位置を記録 ----
 function gpsCapture() {
@@ -4949,6 +5132,8 @@ function gpsNoPos(msg) {
 function gpsSetPos(b) {
   D.gps.pos = { lat: +b.lat.toFixed(7), lng: +b.lng.toFixed(7), acc: Math.round(b.acc), t: b.t };
   gpsCalcPrev();
+  D.gps.touched = true;
+  gpsHints(false);
   gpsShowCap(); gpsRenderPrev(); gpsWarnCheck();
 }
 function gpsCalcPrev() {
@@ -4991,10 +5176,12 @@ function gpsRetake() {
   gpsCapture();
 }
 
-// ---- ボールの場所（前の打の着地を兼ねる） ----
+// ---- ボールの場所（ホールの図を押す。前の打の着地を兼ねる） ----
 function pickPlace(el) {
   const h = hole(), n = h.shots.length; if (!n) return;
   const last = h.shots[n - 1], v = el.dataset.v;
+  if (D.gps) D.gps.touched = true;
+  if (el.dataset.side) last.landSide = el.dataset.side; else delete last.landSide;
   if (v === 'グリーンオン') {
     last.land = 'グリーンオン'; if (last.penalty && !last.prov) last.penalty = null; sv();
     gpsGoCup(false); return;
@@ -5009,19 +5196,19 @@ function pickPlace(el) {
   }
   if (wasPen && last.penalty) last.penalty = null;
   sv();
-  gpsRefresh();
+  gpsRefresh(); gpsHints(true);
   if (D.gps && D.gps.pos) { gpsShowCap(); gpsWarnCheck(); }
 }
 
 // ---- 打った後のボタン ----
 function gpsNext() {
   if (!getSel('sel-club')) { gToast('番手を選んでから「次の打へ」を押してください'); return; }
-  _saveShotCore();
+  _gpsPreSave(); _saveShotCore();
   openAdd();
 }
 function gpsProvisional() {
   if (!getSel('sel-club')) { gToast('先に、今打った球の番手を選んでください'); return; }
-  _saveShotCore();
+  _gpsPreSave(); _saveShotCore();
   D._provNext = true;
   openAdd();
   gToast('暫定球の番手・方向・自己評価を入れてください');
@@ -5029,11 +5216,11 @@ function gpsProvisional() {
 function gpsCupIn() {
   if (!getSel('sel-club')) { gToast('番手を選んでから「カップイン」を押してください'); return; }
   setLand('グリーンオン');
-  _saveShotCore();
+  _gpsPreSave(); _saveShotCore();
   gpsGoCup(true);
 }
 function gpsFinishHole() {
-  if (getSel('sel-club')) _saveShotCore();
+  if (getSel('sel-club')) _gpsPreSave(); _saveShotCore();
   back('s-shots');
   setTimeout(() => go('s-result'), 60);
 }
