@@ -4661,7 +4661,7 @@ renderHome();
     <div id="gl-counts" class="gl-note"></div>
     <div id="gl-cerr" class="gl-err"></div>
     <div id="gl-viewbox" style="display:none">
-      <div><button id="gl-b-illu" class="gl-on" onclick="glSetMode('illu')">イラスト</button><button id="gl-b-photo" onclick="glSetMode('photo')">航空写真</button></div>
+      <div><button id="gl-b-illu" class="gl-on" onclick="glSetMode('illu')">イラスト</button><button id="gl-b-photo" onclick="glSetMode('photo')">航空写真</button><button id="gl-b-draw" onclick="glSetMode('draw')">写真から描く</button></div>
       <div class="gl-holes" id="gl-holes"></div>
       <canvas id="gl-map" width="640" height="900"></canvas>
       <div class="gl-attr" id="gl-attr"></div>
@@ -4732,6 +4732,40 @@ function renderPts(){
 function tileImg(z,x,y,cb){const k=z+'/'+x+'/'+y;tileImg.c=tileImg.c||{};let im=tileImg.c[k];if(im){if(im.complete&&im.naturalWidth)return im;return null;}
   im=new Image();im.crossOrigin='anonymous';im.onload=cb;im.onerror=()=>{addLog('航空写真の読み込みに失敗 '+k);};im.src=TILE.replace('{z}',z).replace('{x}',x).replace('{y}',y);tileImg.c[k]=im;return null;}
 
+// 写真から描く：航空写真の色をならしてから、数色に塗り分ける
+const PAL={wood:[63,107,53],rough:[140,192,99],fair:[176,220,128],built:[205,200,190]};
+function posterize(ctx,W,H){
+  const t0=Date.now();
+  const im=ctx.getImageData(0,0,W,H),d=im.data,N=W*H;
+  const L=new Float32Array(N),S=new Float32Array(N),G=new Float32Array(N);
+  for(let i=0,j=0;i<N;i++,j+=4){const r=d[j],gg=d[j+1],b=d[j+2];const mx=Math.max(r,gg,b),mn=Math.min(r,gg,b);L[i]=0.299*r+0.587*gg+0.114*b;S[i]=mx-mn;G[i]=gg-(r+b)/2;}
+  // 積分画像で、まわり（半径R）の平均と、明るさのばらつき（きめの粗さ）を出す
+  const R=5,W1=W+1;
+  function integ(A,sq){const I=new Float64Array(W1*(H+1));for(let y=0;y<H;y++){let row=0;for(let x=0;x<W;x++){const a=A[y*W+x];row+=sq?a*a:a;I[(y+1)*W1+x+1]=I[y*W1+x+1]+row;}}return I;}
+  const IL=integ(L,false),IL2=integ(L,true),IS=integ(S,false),IG=integ(G,false);
+  const box=(I,x,y)=>{const x0=Math.max(0,x-R),x1=Math.min(W,x+R+1),y0=Math.max(0,y-R),y1=Math.min(H,y+R+1);return (I[y1*W1+x1]-I[y0*W1+x1]-I[y1*W1+x0]+I[y0*W1+x0])/((x1-x0)*(y1-y0));};
+  const mL=new Float32Array(N),sd=new Float32Array(N),mS=new Float32Array(N),mG=new Float32Array(N);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,m=box(IL,x,y);mL[i]=m;sd[i]=Math.sqrt(Math.max(0,box(IL2,x,y)-m*m));mS[i]=box(IS,x,y);mG[i]=box(IG,x,y);}
+  // しきい値は、この画面の中の分布から自動で決める（大津の方法。季節や写真の明るさの違いに合わせる）
+  const smp=[];for(let i=0;i<N;i+=17)smp.push(i);
+  function otsu(vals){if(vals.length<10)return 0;let lo=Infinity,hi=-Infinity;vals.forEach(v=>{if(v<lo)lo=v;if(v>hi)hi=v;});if(hi<=lo)return lo;
+    const nb=64,h=new Array(nb).fill(0),wd=(hi-lo)/nb;vals.forEach(v=>{h[Math.min(nb-1,Math.floor((v-lo)/wd))]++;});
+    let tot=vals.length,sum=0;for(let i=0;i<nb;i++)sum+=h[i]*(lo+(i+0.5)*wd);let w0=0,s0=0,best=-1,th=lo;
+    for(let i=0;i<nb-1;i++){w0+=h[i];s0+=h[i]*(lo+(i+0.5)*wd);const w1=tot-w0;if(!w0||!w1)continue;const m0=s0/w0,m1=(sum-s0)/w1,v=w0*w1*(m0-m1)*(m0-m1);if(v>best){best=v;th=lo+(i+1)*wd;}}
+    return th;}
+  const isBuilt=i=>mS[i]<22&&mL[i]>120;
+  const woodL=otsu(smp.filter(i=>!isBuilt(i)).map(i=>mL[i]));
+  const isWood=i=>mL[i]<woodL;
+  const fairG=otsu(smp.filter(i=>!isBuilt(i)&&!isWood(i)).map(i=>mG[i]));
+  const cnt={wood:0,rough:0,fair:0,built:0};
+  for(let i=0,j=0;i<N;i++,j+=4){
+    let k;if(d[j+3]===0)k='rough';else if(isBuilt(i))k='built';else if(isWood(i))k='wood';else if(mG[i]>=fairG)k='fair';else k='rough';
+    cnt[k]++;const c=PAL[k];d[j]=c[0];d[j+1]=c[1];d[j+2]=c[2];d[j+3]=255;}
+  ctx.setTransform(1,0,0,1,0,0);ctx.putImageData(im,0,0);
+  const pc=k=>Math.round(cnt[k]*100/N);
+  const msg='写真から描く '+(Date.now()-t0)+'ミリ秒 林'+pc('wood')+'% FW'+pc('fair')+'% ラフ'+pc('rough')+'% 道など'+pc('built')+'%';
+  if(posterize.last!==msg){posterize.last=msg;addLog(msg);}
+}
 function drawView(cv,v){
   const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle=v.photo?'#6d7f5a':'#7cb35a';ctx.fillRect(0,0,W,H);
@@ -4743,8 +4777,14 @@ function drawView(cv,v){
     tf();
     if((x1-x0+1)*(y1-y0+1)<=160) for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){const im=tileImg(tz,x,y,()=>{clearTimeout(cv._rt);cv._rt=setTimeout(()=>drawView(cv,v),60);});if(im)ctx.drawImage(im,x*tw-ox,y*tw-oy,tw+0.5/v.s,tw+0.5/v.s);}
   }
+  if(v.drawn){
+    try{posterize(ctx,W,H);const em=g('gl-cerr');if(em&&/航空写真の色/.test(em.textContent))em.textContent='';}
+    catch(e){const m=(e&&e.name||'')+' '+(e&&e.message||e);if(drawView.perr!==m){drawView.perr=m;addLog('航空写真の色を読めない '+m);}
+      const em=g('gl-cerr');if(em)em.textContent='航空写真の色を読めませんでした（'+(e&&e.name||e)+'）。「結果をコピー」で送ってください。';}
+  }
   tf();
-  if(v.illu||v.outline) drawFeats(ctx,v);
+  if(v.drawn) drawFeats(ctx,Object.assign({},v,{illu:true,outline:false,skip:{wood:1,rough:1}}));
+  else if(v.illu||v.outline) drawFeats(ctx,v);
   if(v.pts&&pts.length){pts.forEach((p,i)=>{const q=proj(p.lat,p.lon);const r=p.acc/mpp(p.lat);
     ctx.beginPath();ctx.arc(q.x-ox,q.y-oy,r,0,7);ctx.fillStyle='rgba(33,150,243,0.15)';ctx.fill();ctx.lineWidth=2/v.s;ctx.strokeStyle='rgba(33,150,243,0.8)';ctx.stroke();});
     ctx.beginPath();pts.forEach((p,i)=>{const q=proj(p.lat,p.lon);i?ctx.lineTo(q.x-ox,q.y-oy):ctx.moveTo(q.x-ox,q.y-oy);});ctx.lineWidth=3/v.s;ctx.strokeStyle='#fff';ctx.stroke();
@@ -4759,7 +4799,7 @@ function kind(t){if(!t)return null;const gf=t.golf;
   if(gf==='water_hazard'||gf==='lateral_water_hazard'||t.natural==='water')return'water';if(t.natural==='wood'||t.landuse==='forest')return'wood';return null;}
 const ORDER=['rough','wood','water','fairway','tee','bunker','green','hole'];
 function drawFeats(ctx,v){
-  ORDER.forEach(k=>{feats.filter(f=>f.k===k).forEach(f=>{
+  ORDER.forEach(k=>{if(v.skip&&v.skip[k])return;feats.filter(f=>f.k===k).forEach(f=>{
     f.rings.forEach(r=>{if(r.length<2)return;ctx.beginPath();r.forEach((p,i)=>i?ctx.lineTo(p.x-v.cx,p.y-v.cy):ctx.moveTo(p.x-v.cx,p.y-v.cy));
       const st=STY[k];
       if(k==='hole'){if(!v.illu&&!v.outline)return;ctx.setLineDash([14/v.s,10/v.s]);ctx.lineWidth=3/v.s;ctx.strokeStyle=v.photo?'rgba(255,255,255,0.8)':'rgba(255,255,255,0.7)';ctx.stroke();ctx.setLineDash([]);return;}
@@ -4930,10 +4970,10 @@ window.glShowHole=function(k){
   [...g('gl-holes').children].forEach((b,i)=>b.classList.toggle('gl-on',i===k+1));
   redrawMap();
 };
-window.glSetMode=function(m){mode=m;g('gl-b-illu').classList.toggle('gl-on',m==='illu');g('gl-b-photo').classList.toggle('gl-on',m==='photo');redrawMap();};
+window.glSetMode=function(m){mode=m;g('gl-b-illu').classList.toggle('gl-on',m==='illu');g('gl-b-photo').classList.toggle('gl-on',m==='photo');g('gl-b-draw').classList.toggle('gl-on',m==='draw');redrawMap();};
 function redrawMap(){if(!view)return;
-  const v=Object.assign({},view,{photo:mode==='photo',illu:mode==='illu',outline:mode==='photo',pts:true});drawView(g('gl-map'),v);
-  g('gl-attr').textContent=mode==='photo'?'出典：国土地理院（全国最新写真（シームレス））を加工して作成。白い線は © OpenStreetMap contributors':'© OpenStreetMap contributors（形のデータ）';}
+  const v=Object.assign({},view,{photo:mode==='photo'||mode==='draw',drawn:mode==='draw',illu:mode==='illu',outline:mode==='photo',pts:true});drawView(g('gl-map'),v);
+  g('gl-attr').textContent=mode==='draw'?'出典：国土地理院（全国最新写真（シームレス））の色を塗り分けて作成。グリーンなどの形は © OpenStreetMap contributors':mode==='photo'?'出典：国土地理院（全国最新写真（シームレス））を加工して作成。白い線は © OpenStreetMap contributors':'© OpenStreetMap contributors（形のデータ）';}
 
 window.glCopy=function(){
   const lines=['【位置と地図の試しの結果】','開いている場所：'+(isStandalone()?'ホーム画面のアプリ':'Safari'),'端末：'+navigator.userAgent,''];
